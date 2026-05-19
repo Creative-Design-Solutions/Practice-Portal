@@ -726,6 +726,30 @@
         <div class="week-strip" id="pattern-strip"></div>
       </div>
 
+      <!-- CALENDAR QUICK REF BANNER -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:1.5rem;">
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:0.5rem;padding:0.65rem 1.25rem;background:rgba(45,158,150,0.06);border-bottom:1px solid var(--border-soft);">
+          <span style="font-size:0.8rem;">📅</span>
+          <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--teal);">How the Calendar Works</span>
+        </div>
+        <div style="padding:0.9rem 1.25rem;border-right:1px solid var(--border-soft);">
+          <p style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:0.25rem;">Weekly Schedule</p>
+          <p style="font-size:0.7rem;color:var(--text-3);line-height:1.5;">Displays your schedule as it's set in your calendar.</p>
+        </div>
+        <div style="padding:0.9rem 1.25rem;border-right:1px solid var(--border-soft);">
+          <p style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:0.25rem;">Edit the Calendar</p>
+          <p style="font-size:0.7rem;color:var(--text-3);line-height:1.5;">Click on the date and adjust — option to add a note for that day.</p>
+        </div>
+        <div style="padding:0.9rem 1.25rem;border-right:1px solid var(--border-soft);">
+          <p style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:0.25rem;">Reset to Default</p>
+          <p style="font-size:0.7rem;color:var(--text-3);line-height:1.5;">Removes a one-off change and restores the weekly schedule for that date.</p>
+        </div>
+        <div style="padding:0.9rem 1.25rem;">
+          <p style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:0.25rem;">Recognize Holidays</p>
+          <p style="font-size:0.7rem;color:var(--text-3);line-height:1.5;">Holidays auto-populate. A hub notice lets you confirm open or closed — shows in announcements.</p>
+        </div>
+      </div>
+
       <div class="year-strip" id="year-strip"></div>
       <div class="cal-wrap">
         <div class="cal-dow-row">
@@ -1599,12 +1623,6 @@ const REF_DATA = [
   ]},
   { title:'Urgent Contacts', icon:'📞', items:[
     {term:'After hours',def:'—'},{term:'Hospital',def:'—'},{term:'On-call',def:'—'},
-  ]},
-  { title:'How the Calendar Works', icon:'📅', items:[
-    {term:'Weekly Schedule',     def:'Displays your schedule as it\'s set in your calendar'},
-    {term:'Edit the calendar',   def:'Click on the date and adjust accordingly — option to add a note for that day'},
-    {term:'Reset to default',    def:'Removes a one-off change and restores the weekly schedule for that date'},
-    {term:'Recognize Holidays',  def:'Holidays automatically populate to your calendar. A notice on the main hub lets you confirm if you\'re open or closed — your selection shows up in announcements'},
   ]},
 ];
 
