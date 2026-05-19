@@ -582,6 +582,32 @@
       .tab-label { display: none; }
       .tab-btn { padding: 0.5rem 0.7rem; }
     }
+    /* ── TRACK LIST (Recalls · Follow-ups · No-shows) ── */
+    .track-item { display:flex;align-items:flex-start;gap:0.6rem;padding:0.65rem 0;border-bottom:1px solid var(--border-soft); }
+    .track-item:last-child { border-bottom:none;padding-bottom:0; }
+    .track-body { flex:1;min-width:0; }
+    .track-name { font-size:0.84rem;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .track-sub  { font-size:0.71rem;color:var(--text-3);margin-top:0.1rem;line-height:1.4; }
+    .track-side { display:flex;flex-direction:column;align-items:flex-end;gap:0.3rem;flex-shrink:0; }
+    .chip { display:inline-flex;align-items:center;font-size:0.67rem;font-weight:700;padding:0.18rem 0.55rem;border-radius:20px;cursor:pointer;border:none;font-family:inherit;transition:opacity 0.15s;letter-spacing:0.01em; }
+    .chip-gray  { background:rgba(141,160,172,0.13);color:var(--text-3); }
+    .chip-amber { background:rgba(200,145,0,0.11);color:#8a6200; }
+    .chip-teal  { background:rgba(45,158,150,0.12);color:var(--teal-dark); }
+    .chip-red   { background:rgba(180,50,40,0.10);color:#a0291f; }
+    .chip:hover { opacity:0.72; }
+    .chip-del   { background:none;border:none;color:var(--text-4);font-size:1.05rem;cursor:pointer;padding:0.1rem 0.2rem;line-height:1;transition:color 0.15s;font-family:inherit; }
+    .chip-del:hover { color:#a0291f; }
+    /* ── REFERRAL TABLE ── */
+    .risk-dot { display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:0.35rem;flex-shrink:0;vertical-align:middle; }
+    .risk-green { background:#27ae60; } .risk-amber { background:#e6a817; } .risk-red { background:#c0392b; }
+    .ref-tbl { width:100%;border-collapse:collapse;font-size:0.83rem; }
+    .ref-tbl th { font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-3);padding:0.6rem 0.85rem;text-align:left;border-bottom:1px solid var(--border);background:var(--teal-faint); }
+    .ref-tbl td { padding:0.72rem 0.85rem;border-bottom:1px solid var(--border-soft);vertical-align:middle; }
+    .ref-tbl tr:last-child td { border-bottom:none; }
+    .ref-tbl tr:hover td { background:var(--teal-faint); }
+    .ref-wrap { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden; }
+    /* ── RESPONDED ── */
+    .rsp-badge { font-size:0.67rem;font-weight:600;color:var(--teal-dark);background:rgba(45,158,150,0.10);padding:0.15rem 0.5rem;border-radius:12px; }
   </style>
 </head>
 <body>
@@ -636,6 +662,10 @@
         <button class="tab-btn" onclick="showTab('settings',this)">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span class="tab-label">Settings</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('referrals',this)">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h5M9 8h5M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="2" cy="8" r="1.5" fill="currentColor" opacity="0.7"/></svg>
+          <span class="tab-label">Referrals</span>
         </button>
       </nav>
 
@@ -710,6 +740,30 @@
             <span class="hub-card-label">Quick Links</span>
           </div>
           <div id="hub-links"><div class="hub-empty">No links configured</div></div>
+        </div>
+
+        <div class="hub-card">
+          <div class="hub-card-header">
+            <span class="hub-card-label">Recalls</span>
+            <button class="btn btn-ghost btn-sm" onclick="openRecallModal()">+ Add</button>
+          </div>
+          <div id="hub-recalls"><div class="hub-empty">No recalls pending</div></div>
+        </div>
+
+        <div class="hub-card">
+          <div class="hub-card-header">
+            <span class="hub-card-label">Post-Consult Follow-ups</span>
+            <button class="btn btn-ghost btn-sm" onclick="openFuModal()">+ Add</button>
+          </div>
+          <div id="hub-followups"><div class="hub-empty">No pending follow-ups</div></div>
+        </div>
+
+        <div class="hub-card">
+          <div class="hub-card-header">
+            <span class="hub-card-label">No-Shows</span>
+            <button class="btn btn-ghost btn-sm" onclick="openNsModal()">+ Log</button>
+          </div>
+          <div id="hub-noshows"><div class="hub-empty">None logged</div></div>
         </div>
       </div>
     </div>
@@ -842,6 +896,35 @@
       </div>
     </div>
 
+    <!-- REFERRALS -->
+    <div id="panel-referrals" class="tab-panel">
+      <div class="page-header">
+        <div>
+          <p class="page-title">Referral Sources</p>
+          <p class="page-sub">Track referring practices, referral volume, and post-op communication</p>
+        </div>
+        <button class="btn btn-primary" onclick="openRefModal()">+ Add referrer</button>
+      </div>
+      <div class="ref-wrap">
+        <table class="ref-tbl">
+          <thead>
+            <tr>
+              <th style="width:1.5rem;"></th>
+              <th>Practice / Referrer</th>
+              <th>Contact</th>
+              <th>Last Referral</th>
+              <th>Total</th>
+              <th>Post-Op Loop</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="referral-tbody">
+            <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-3);font-style:italic;font-size:0.85rem;">No referrers added yet — add your first referring practice above.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -905,6 +988,78 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeDelModal()">Keep it</button>
       <button class="btn btn-danger" onclick="confirmDelete()">Yes, delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Recall modal -->
+<div class="modal-overlay" id="recall-modal">
+  <div class="modal">
+    <p class="modal-title">Add Recall</p>
+    <label class="form-label">Patient name</label>
+    <input class="form-field" id="rc-patient" type="text" placeholder="e.g. Jane Smith" style="margin-bottom:0.75rem;">
+    <label class="form-label">Phone</label>
+    <input class="form-field" id="rc-phone" type="text" placeholder="e.g. (555) 123-4567" style="margin-bottom:0.75rem;">
+    <label class="form-label">Reason</label>
+    <input class="form-field" id="rc-reason" type="text" placeholder="e.g. 6-month review, post-op check" style="margin-bottom:0.75rem;">
+    <label class="form-label">Due date</label>
+    <input class="form-field" id="rc-due" type="date" style="margin-bottom:0;">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeRecallModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="recallSave()">Save recall</button>
+    </div>
+  </div>
+</div>
+
+<!-- Follow-up modal -->
+<div class="modal-overlay" id="fu-modal">
+  <div class="modal">
+    <p class="modal-title">Add Follow-up</p>
+    <label class="form-label">Patient name</label>
+    <input class="form-field" id="fu-patient" type="text" placeholder="e.g. John Doe" style="margin-bottom:0.75rem;">
+    <label class="form-label">Procedure discussed</label>
+    <input class="form-field" id="fu-procedure" type="text" placeholder="e.g. Jaw surgery, implants" style="margin-bottom:0.75rem;">
+    <label class="form-label">Consult date</label>
+    <input class="form-field" id="fu-date" type="date" style="margin-bottom:0;">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeFuModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="fuSave()">Save follow-up</button>
+    </div>
+  </div>
+</div>
+
+<!-- No-show modal -->
+<div class="modal-overlay" id="ns-modal">
+  <div class="modal">
+    <p class="modal-title">Log No-Show</p>
+    <label class="form-label">Patient name</label>
+    <input class="form-field" id="ns-patient" type="text" placeholder="e.g. Sarah Jones" style="margin-bottom:0.75rem;">
+    <label class="form-label">Phone</label>
+    <input class="form-field" id="ns-phone" type="text" placeholder="e.g. (555) 987-6543" style="margin-bottom:0;">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeNsModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="nsSave()">Log</button>
+    </div>
+  </div>
+</div>
+
+<!-- Referral modal -->
+<div class="modal-overlay" id="ref-modal">
+  <div class="modal">
+    <p class="modal-title">Add Referring Practice</p>
+    <label class="form-label">Practice name</label>
+    <input class="form-field" id="ref-practice" type="text" placeholder="e.g. Smith Family Dental" style="margin-bottom:0.75rem;">
+    <label class="form-label">Referring dentist / contact</label>
+    <input class="form-field" id="ref-contact" type="text" placeholder="e.g. Dr. Smith" style="margin-bottom:0.75rem;">
+    <label class="form-label">Phone</label>
+    <input class="form-field" id="ref-phone" type="text" placeholder="e.g. (555) 111-2222" style="margin-bottom:0.75rem;">
+    <label class="form-label">Date of last referral</label>
+    <input class="form-field" id="ref-last" type="date" style="margin-bottom:0.75rem;">
+    <label class="form-label">Total referrals to date</label>
+    <input class="form-field" id="ref-count" type="number" min="0" placeholder="0" style="margin-bottom:0;">
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeRefModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="referralSave()">Save referrer</button>
     </div>
   </div>
 </div>
@@ -1018,6 +1173,11 @@ async function initPortal() {
   renderMonth(_calYear, _calMonth);
   await krInit();
   await annInit();
+  await recallInit();
+  await fuInit();
+  await nsInit();
+  await referralInit();
+  await respondedInit();
   await inboxRenderHub();
   inboxUpdateBadge();
   renderRef();
@@ -1029,9 +1189,10 @@ function showTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`panel-${name}`).classList.add('active');
   if (btn) btn.classList.add('active');
-  if (name === 'inbox')    inboxLoad();
-  if (name === 'notes')    { krInit(); annRender(); }
-  if (name === 'schedule') { renderPatternView(); renderMonth(_calYear, _calMonth); }
+  if (name === 'inbox')     inboxLoad();
+  if (name === 'notes')     { krInit(); annRender(); }
+  if (name === 'schedule')  { renderPatternView(); renderMonth(_calYear, _calMonth); }
+  if (name === 'referrals') referralRender();
 }
 
 // ── KEY REMINDERS ─────────────────────────────────────────────────────────────
@@ -1116,7 +1277,10 @@ function inboxCard(r) {
       ${r.phone?`<div class="inbox-detail-row"><span class="inbox-detail-label">Phone</span><span>${r.phone}</span></div>`:''}
       ${r.message?`<div class="inbox-detail-row"><span class="inbox-detail-label">Message</span><span style="color:var(--text)">${r.message}</span></div>`:''}
       ${files.length?`<div class="inbox-detail-row"><span class="inbox-detail-label">Attachments</span><span>${files.map(f=>`<a href="#" onclick="dlFile('${f}',event)" style="color:var(--teal);text-decoration:none;font-weight:500;">📎 ${f.split('/').pop()}</a>`).join('<br>')}</span></div>`:''}
-      <div class="inbox-actions"><button class="btn btn-danger btn-sm" onclick="openDelModal('${r.id}','${name.replace(/'/g,"\\'")}',${JSON.stringify(files).replace(/"/g,"'")})">Delete enquiry</button></div>
+      <div class="inbox-actions" style="display:flex;gap:0.5rem;align-items:center;">
+        ${_responded.has(String(r.id)) ? `<span class="rsp-badge">✓ Responded</span>` : `<button class="btn btn-ghost btn-sm" onclick="toggleResponded('${r.id}')">Mark responded</button>`}
+        <button class="btn btn-danger btn-sm" onclick="openDelModal('${r.id}','${name.replace(/'/g,"\\'")}',${JSON.stringify(files).replace(/"/g,"'")})">Delete</button>
+      </div>
     </div>
   </div>`;
 }
@@ -1689,6 +1853,254 @@ function renderQuickLinks() {
       <span class="hub-dot muted"></span>
       <div class="hub-item-main"><a href="${l.url}" target="_blank" style="color:var(--teal);text-decoration:none;font-size:0.84rem;font-weight:500;">${l.icon?l.icon+' ':''}${l.label}</a></div>
     </div>`).join('');
+}
+
+// ── RECALLS ───────────────────────────────────────────────────────────────────
+const RECALL_KEY = 'recalls';
+let _recalls = [];
+
+async function recallInit() {
+  if (_supa) {
+    const { data } = await _supa.from('portal_settings').select('value').eq('key', RECALL_KEY).single();
+    _recalls = data?.value ? JSON.parse(data.value) : [];
+  } else {
+    _recalls = JSON.parse(localStorage.getItem(RECALL_KEY) || '[]');
+  }
+  recallRenderHub();
+}
+
+function recallRenderHub() {
+  const el = document.getElementById('hub-recalls');
+  const pending = _recalls.filter(r => r.status !== 'rescheduled');
+  if (!pending.length) { el.innerHTML = '<div class="hub-empty">No recalls pending</div>'; return; }
+  el.innerHTML = pending.slice(0,5).map(r => {
+    const chipClass = r.status === 'tried' ? 'chip-amber' : 'chip-gray';
+    const chipLabel = r.status === 'tried' ? 'Tried' : 'Not contacted';
+    const nextStatus = r.status === 'tried' ? 'rescheduled' : 'tried';
+    const nextLabel  = r.status === 'tried' ? 'Rescheduled' : 'Tried';
+    return `<div class="track-item">
+      <div class="track-body">
+        <div class="track-name">${esc(r.patient)}</div>
+        <div class="track-sub">${r.reason ? esc(r.reason) + (r.due ? ' · Due ' + fmt(r.due) : '') : (r.due ? 'Due ' + fmt(r.due) : '')}</div>
+      </div>
+      <div class="track-side">
+        <button class="chip ${chipClass}" onclick="recallCycle('${r.id}')" title="Click to advance status">${chipLabel}</button>
+        <button class="chip-del" onclick="recallDelete('${r.id}')" title="Remove">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function recallCycle(id) {
+  const r = _recalls.find(x => x.id === id); if (!r) return;
+  r.status = r.status === 'none' ? 'tried' : r.status === 'tried' ? 'rescheduled' : 'none';
+  await recallPersist(); recallRenderHub();
+}
+async function recallDelete(id) { _recalls = _recalls.filter(r => r.id !== id); await recallPersist(); recallRenderHub(); }
+async function recallPersist() {
+  const j = JSON.stringify(_recalls);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: RECALL_KEY, value: j }, { onConflict: 'key' });
+  else localStorage.setItem(RECALL_KEY, j);
+}
+function openRecallModal()  { ['rc-patient','rc-phone','rc-reason'].forEach(id=>document.getElementById(id).value=''); document.getElementById('rc-due').value=''; document.getElementById('recall-modal').classList.add('open'); setTimeout(()=>document.getElementById('rc-patient').focus(),100); }
+function closeRecallModal() { document.getElementById('recall-modal').classList.remove('open'); }
+async function recallSave() {
+  const patient = document.getElementById('rc-patient').value.trim(); if (!patient) return;
+  _recalls.push({ id: Date.now().toString(), patient, phone: document.getElementById('rc-phone').value.trim(), reason: document.getElementById('rc-reason').value.trim(), due: document.getElementById('rc-due').value, status: 'none' });
+  await recallPersist(); closeRecallModal(); recallRenderHub();
+}
+
+// ── POST-CONSULT FOLLOW-UPS ───────────────────────────────────────────────────
+const FU_KEY = 'followups';
+let _followups = [];
+
+async function fuInit() {
+  if (_supa) {
+    const { data } = await _supa.from('portal_settings').select('value').eq('key', FU_KEY).single();
+    _followups = data?.value ? JSON.parse(data.value) : [];
+  } else {
+    _followups = JSON.parse(localStorage.getItem(FU_KEY) || '[]');
+  }
+  fuRenderHub();
+}
+
+function fuRenderHub() {
+  const el = document.getElementById('hub-followups');
+  const pending = _followups.filter(f => !f.done);
+  if (!pending.length) { el.innerHTML = '<div class="hub-empty">No pending follow-ups</div>'; return; }
+  const today = new Date(); today.setHours(0,0,0,0);
+  el.innerHTML = pending.slice(0,5).map(f => {
+    const consult = f.consultDate ? new Date(f.consultDate + 'T12:00:00') : null;
+    const age = consult ? Math.floor((today - consult) / 86400000) : null;
+    const urgency = age === null ? '' : age <= 1 ? '<span class="chip chip-teal" style="cursor:default;">Today</span>' : age <= 3 ? `<span class="chip chip-amber" style="cursor:default;">${age}d ago</span>` : `<span class="chip chip-red" style="cursor:default;">⚠ ${age}d ago</span>`;
+    return `<div class="track-item">
+      <div class="track-body">
+        <div class="track-name">${esc(f.patient)}</div>
+        <div class="track-sub">${f.procedure ? esc(f.procedure) : ''}${f.consultDate ? ' · Consult ' + fmt(f.consultDate+'T12:00:00') : ''}</div>
+      </div>
+      <div class="track-side">
+        ${urgency}
+        <button class="chip chip-teal" onclick="fuDone('${f.id}')">✓ Done</button>
+        <button class="chip-del" onclick="fuDelete('${f.id}')">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function fuDone(id)   { const f = _followups.find(x=>x.id===id); if(f) f.done=true; await fuPersist(); fuRenderHub(); }
+async function fuDelete(id) { _followups = _followups.filter(f=>f.id!==id); await fuPersist(); fuRenderHub(); }
+async function fuPersist() {
+  const j = JSON.stringify(_followups);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: FU_KEY, value: j }, { onConflict: 'key' });
+  else localStorage.setItem(FU_KEY, j);
+}
+function openFuModal()  { ['fu-patient','fu-procedure'].forEach(id=>document.getElementById(id).value=''); document.getElementById('fu-date').value=''; document.getElementById('fu-modal').classList.add('open'); setTimeout(()=>document.getElementById('fu-patient').focus(),100); }
+function closeFuModal() { document.getElementById('fu-modal').classList.remove('open'); }
+async function fuSave() {
+  const patient = document.getElementById('fu-patient').value.trim(); if (!patient) return;
+  _followups.push({ id: Date.now().toString(), patient, procedure: document.getElementById('fu-procedure').value.trim(), consultDate: document.getElementById('fu-date').value, done: false });
+  await fuPersist(); closeFuModal(); fuRenderHub();
+}
+
+// ── NO-SHOWS ──────────────────────────────────────────────────────────────────
+const NS_KEY = 'noshows';
+let _noshows = [];
+
+async function nsInit() {
+  if (_supa) {
+    const { data } = await _supa.from('portal_settings').select('value').eq('key', NS_KEY).single();
+    _noshows = data?.value ? JSON.parse(data.value) : [];
+  } else {
+    _noshows = JSON.parse(localStorage.getItem(NS_KEY) || '[]');
+  }
+  nsRenderHub();
+}
+
+function nsRenderHub() {
+  const el = document.getElementById('hub-noshows');
+  if (!_noshows.length) { el.innerHTML = '<div class="hub-empty">None logged</div>'; return; }
+  const todayIso = new Date().toISOString().slice(0,10);
+  const todayCount = _noshows.filter(n => n.date === todayIso).length;
+  const callBacks  = _noshows.filter(n => !n.calledBack);
+  el.innerHTML = `<div style="display:flex;gap:1rem;margin-bottom:0.75rem;padding-bottom:0.65rem;border-bottom:1px solid var(--border-soft);">
+    <div style="text-align:center;"><div style="font-size:1.4rem;font-weight:700;color:var(--text);line-height:1;">${todayCount}</div><div style="font-size:0.68rem;color:var(--text-3);margin-top:0.1rem;">Today</div></div>
+    <div style="text-align:center;"><div style="font-size:1.4rem;font-weight:700;color:${callBacks.length?'#a0291f':'var(--text)'};line-height:1;">${callBacks.length}</div><div style="font-size:0.68rem;color:var(--text-3);margin-top:0.1rem;">Needs callback</div></div>
+  </div>` +
+  callBacks.slice(0,4).map(n => `<div class="track-item">
+    <div class="track-body">
+      <div class="track-name">${esc(n.patient)}</div>
+      <div class="track-sub">${n.phone ? esc(n.phone) + ' · ' : ''}${fmt(n.date+'T12:00:00')}</div>
+    </div>
+    <div class="track-side">
+      <button class="chip chip-amber" onclick="nsCallback('${n.id}')">Call back</button>
+      <button class="chip-del" onclick="nsDelete('${n.id}')">×</button>
+    </div>
+  </div>`).join('');
+}
+
+async function nsCallback(id) { const n=_noshows.find(x=>x.id===id); if(n) n.calledBack=true; await nsPersist(); nsRenderHub(); }
+async function nsDelete(id)   { _noshows=_noshows.filter(n=>n.id!==id); await nsPersist(); nsRenderHub(); }
+async function nsPersist() {
+  const j = JSON.stringify(_noshows);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: NS_KEY, value: j }, { onConflict: 'key' });
+  else localStorage.setItem(NS_KEY, j);
+}
+function openNsModal()  { ['ns-patient','ns-phone'].forEach(id=>document.getElementById(id).value=''); document.getElementById('ns-modal').classList.add('open'); setTimeout(()=>document.getElementById('ns-patient').focus(),100); }
+function closeNsModal() { document.getElementById('ns-modal').classList.remove('open'); }
+async function nsSave() {
+  const patient = document.getElementById('ns-patient').value.trim(); if (!patient) return;
+  _noshows.push({ id: Date.now().toString(), patient, phone: document.getElementById('ns-phone').value.trim(), date: new Date().toISOString().slice(0,10), calledBack: false });
+  await nsPersist(); closeNsModal(); nsRenderHub();
+}
+
+// ── REFERRALS ─────────────────────────────────────────────────────────────────
+const REFERRAL_KEY = 'referrals';
+let _referrals = [];
+
+async function referralInit() {
+  if (_supa) {
+    const { data } = await _supa.from('portal_settings').select('value').eq('key', REFERRAL_KEY).single();
+    _referrals = data?.value ? JSON.parse(data.value) : [];
+  } else {
+    _referrals = JSON.parse(localStorage.getItem(REFERRAL_KEY) || '[]');
+  }
+}
+
+function referralRender() {
+  const tbody = document.getElementById('referral-tbody');
+  if (!tbody) return;
+  if (!_referrals.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-3);font-style:italic;font-size:0.85rem;">No referrers added yet — add your first referring practice above.</td></tr>';
+    return;
+  }
+  const sorted = [..._referrals].sort((a,b) => (b.lastRef||'') > (a.lastRef||'') ? 1 : -1);
+  const today = new Date(); today.setHours(0,0,0,0);
+  tbody.innerHTML = sorted.map(r => {
+    const last = r.lastRef ? new Date(r.lastRef+'T12:00:00') : null;
+    const days = last ? Math.floor((today - last) / 86400000) : null;
+    const dotClass = days === null ? 'risk-amber' : days <= 30 ? 'risk-green' : days <= 60 ? 'risk-amber' : 'risk-red';
+    const lastLabel = last ? fmt(r.lastRef+'T12:00:00') : '—';
+    const postOpBtn = r.postOp
+      ? `<span class="chip chip-teal" style="cursor:default;">✓ Sent</span>`
+      : `<button class="chip chip-gray" onclick="referralTogglePostOp('${r.id}')">Pending</button>`;
+    return `<tr>
+      <td><span class="risk-dot ${dotClass}" title="${days===null?'No date':days+' days ago'}"></span></td>
+      <td><div style="font-weight:500;">${esc(r.practice)}</div></td>
+      <td style="color:var(--text-2);">${esc(r.contact||'—')}<br><span style="font-size:0.7rem;color:var(--text-3);">${esc(r.phone||'')}</span></td>
+      <td>${lastLabel}${days!==null?`<br><span style="font-size:0.69rem;color:var(--text-3);">${days===0?'Today':days+' days ago'}</span>`:''}</td>
+      <td style="font-weight:600;color:var(--text);">${r.count||0}</td>
+      <td>${postOpBtn}</td>
+      <td><button class="chip-del" onclick="referralDelete('${r.id}')" title="Remove referrer">×</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function referralTogglePostOp(id) {
+  const r = _referrals.find(x=>x.id===id); if(r) r.postOp = !r.postOp;
+  await referralPersist(); referralRender();
+}
+async function referralDelete(id) { _referrals=_referrals.filter(r=>r.id!==id); await referralPersist(); referralRender(); }
+async function referralPersist() {
+  const j = JSON.stringify(_referrals);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: REFERRAL_KEY, value: j }, { onConflict: 'key' });
+  else localStorage.setItem(REFERRAL_KEY, j);
+}
+function openRefModal()  { ['ref-practice','ref-contact','ref-phone','ref-last'].forEach(id=>document.getElementById(id).value=''); document.getElementById('ref-count').value='0'; document.getElementById('ref-modal').classList.add('open'); setTimeout(()=>document.getElementById('ref-practice').focus(),100); }
+function closeRefModal() { document.getElementById('ref-modal').classList.remove('open'); }
+async function referralSave() {
+  const practice = document.getElementById('ref-practice').value.trim(); if (!practice) return;
+  _referrals.push({ id: Date.now().toString(), practice, contact: document.getElementById('ref-contact').value.trim(), phone: document.getElementById('ref-phone').value.trim(), lastRef: document.getElementById('ref-last').value, count: parseInt(document.getElementById('ref-count').value)||0, postOp: false });
+  await referralPersist(); closeRefModal(); referralRender();
+}
+
+// ── INBOX RESPONDED ───────────────────────────────────────────────────────────
+const RESPONDED_KEY = 'inbox_responded';
+let _responded = new Set();
+
+async function respondedInit() {
+  if (_supa) {
+    const { data } = await _supa.from('portal_settings').select('value').eq('key', RESPONDED_KEY).single();
+    _responded = new Set(data?.value ? JSON.parse(data.value) : []);
+  } else {
+    _responded = new Set(JSON.parse(localStorage.getItem(RESPONDED_KEY) || '[]'));
+  }
+}
+
+async function toggleResponded(id) {
+  _responded.add(String(id));
+  await respondedPersist();
+  // Refresh the card in place
+  const actions = document.querySelector(`#ic-${id} .inbox-actions`);
+  if (actions) {
+    const btn = actions.querySelector('.btn-ghost');
+    if (btn) btn.replaceWith(Object.assign(document.createElement('span'), { className:'rsp-badge', textContent:'✓ Responded' }));
+  }
+}
+
+async function respondedPersist() {
+  const j = JSON.stringify([..._responded]);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: RESPONDED_KEY, value: j }, { onConflict: 'key' });
+  else localStorage.setItem(RESPONDED_KEY, j);
 }
 
 // ── UTILS ─────────────────────────────────────────────────────────────────────
