@@ -409,7 +409,7 @@
     .week-slot-label { font-size: 0.56rem; font-weight: 700; color: var(--text-4); letter-spacing: 0.05em; flex-shrink: 0; width: 14px; }
     .week-day-loc   { font-size: 0.62rem; font-weight: 600; border-radius: 6px; padding: 3px 6px; border: 1px solid transparent; line-height: 1.4; display: inline-block; max-width: 100%; white-space: normal; word-break: break-word; }
     .week-day-slots { flex: 1; }
-    .week-day-note  { width:100%; margin-top:0.5rem; font-size:0.62rem; color:var(--text-2); background:rgba(249,250,251,0.8); border:1px dashed rgba(45,158,150,0.2); border-radius:6px; padding:4px 6px; resize:none; font-family:'Inter',sans-serif; line-height:1.4; }
+    .week-day-note  { width:100%; margin-top:0.5rem; font-size:0.62rem; color:var(--text-2); background:rgba(249,250,251,0.8); border:1px dashed rgba(45,158,150,0.2); border-radius:6px; padding:4px 6px; resize:none; font-family:'Inter',sans-serif; line-height:1.4; overflow:hidden; min-height:2rem; }
 
     /* ── MONTHLY CALENDAR ─────────────────────────────────────────────────── */
     .year-strip { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 1.75rem; align-items: center; }
@@ -1204,9 +1204,16 @@ function renderPatternView() {
              <div class="week-day-slot-row"><span class="week-slot-label">PM</span><div class="week-day-loc" style="background:${pmi.bg};color:${pmi.color}">${pmLoc}</div></div>`
         }
       </div>
-      <textarea class="week-day-note" rows="2" placeholder="Add a note…" oninput="savePatternNote(${dow},this.value)" onclick="event.stopPropagation()">${savedNote}</textarea>
+      <textarea class="week-day-note" rows="1" placeholder="Add a note…" oninput="savePatternNote(${dow},this.value);this.style.height='auto';this.style.height=this.scrollHeight+'px'" onclick="event.stopPropagation()">${savedNote}</textarea>
     </div>`;
   }).join('');
+  // init heights for any pre-filled note text
+  requestAnimationFrame(() => {
+    strip.querySelectorAll('.week-day-note').forEach(ta => {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    });
+  });
 }
 
 function openTemplateEdit(dow) {
@@ -1218,7 +1225,7 @@ function openTemplateEdit(dow) {
     `Changes apply to every ${DAY_NAMES[dow]}`,
     tmpl.am?.location||'Off', tmpl.am?.type,
     tmpl.pm?.location||'Off', tmpl.pm?.type,
-    '', false, false
+    tmpl.note||'', false, true
   );
 }
 
@@ -1387,6 +1394,7 @@ async function saveSchedEdit() {
     _schedTemplate[_editDow] = {
       am: { location: amLoc, type: amType },
       pm: { location: pmLoc, type: pmType },
+      ...(note ? { note } : {}),
     };
     await tmplPersist();
     closeSchedEdit();
@@ -1418,6 +1426,7 @@ async function savePatternNote(dow, value) {
   if (note) _schedTemplate[dow].note = note;
   else delete _schedTemplate[dow].note;
   await tmplPersist();
+  renderWeekHub();
 }
 
 async function saveWeekNote(iso, value) {
