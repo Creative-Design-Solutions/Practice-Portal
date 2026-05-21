@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="https://alcdn.msauth.net/browser/2.38.2/js/msal-browser.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async></script>
   <style>
     :root {
       --teal:        #2d9e96;
@@ -195,8 +197,8 @@
     }
 
     .top-bar-inner {
-      max-width: 1320px; margin: 0 auto; padding: 0 2rem;
-      height: 62px; display: flex; align-items: center; gap: 2rem;
+      max-width: 1320px; margin: 0 auto; padding: 0 1.25rem;
+      height: 62px; display: flex; align-items: center; gap: 1rem;
     }
 
     .bar-brand { display: flex; align-items: center; gap: 0.8rem; flex-shrink: 0; }
@@ -232,21 +234,21 @@
     }
 
     /* Tab navigation */
-    .tab-nav { flex: 1; display: flex; align-items: center; gap: 0; overflow-x: auto; scrollbar-width: none; padding-left: 0.5rem; }
-    .tab-nav::-webkit-scrollbar { display: none; }
-
+    .tab-nav { flex: 1; display: flex; align-items: center; gap: 0; overflow: visible; padding-left: 0.25rem; }
     .tab-btn {
-      display: flex; align-items: center; gap: 0.4rem;
-      padding: 0.5rem 1rem;
+      display: flex; align-items: center; gap: 0.35rem;
+      padding: 0.5rem 0.75rem;
       border: none; background: transparent;
+      border-radius: 8px;
       font-family: 'Inter', sans-serif;
-      font-size: 0.8rem; font-weight: 500;
+      font-size: 0.78rem; font-weight: 500;
       color: var(--text-3);
       cursor: pointer; white-space: nowrap;
-      transition: color 0.15s;
-      position: relative;
-      letter-spacing: 0.01em;
+      transition: color 0.15s, background 0.15s;
+      position: relative; letter-spacing: 0.01em;
     }
+    .tab-btn:hover { color: var(--text-2); background: rgba(0,0,0,0.03); }
+    .tab-btn svg { width: 13px; height: 13px; flex-shrink: 0; }
     .tab-btn::after {
       content: '';
       position: absolute;
@@ -273,6 +275,24 @@
     .bar-right { display: flex; align-items: center; gap: 1.25rem; flex-shrink: 0; margin-left: auto; }
     .bar-surgeon { font-size: 0.78rem; color: var(--text-2); font-weight: 500; }
     .bar-date { font-size: 0.72rem; color: var(--text-3); }
+    /* Apps launcher */
+    .apps-launcher { position: relative; }
+    .apps-launcher-btn { display: flex; align-items: center; gap: 0.3rem; height: 28px; padding: 0 0.5rem; border-radius: 6px; border: none; background: transparent; cursor: pointer; color: var(--text-3); font-size: 0.78rem; font-weight: 500; font-family: inherit; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+    .apps-launcher-btn:hover { background: var(--border-soft); color: var(--text); }
+    .apps-launcher-btn.open { color: var(--teal); }
+    .apps-launcher-btn svg { transition: transform 0.2s; }
+    .apps-launcher-btn.open svg { transform: rotate(180deg); }
+    .apps-dropdown {
+      position: absolute; right: 0; top: calc(100% + 6px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      min-width: 180px; z-index: 500;
+      padding: 0.35rem 0; display: none;
+    }
+    .apps-dropdown.open { display: block; }
+    .apps-dropdown-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-4); padding: 0.45rem 0.9rem 0.2rem; }
+    .apps-link { display: block; padding: 0.45rem 0.9rem; text-decoration: none; color: var(--text-2); font-size: 0.82rem; transition: background 0.1s, color 0.1s; }
+    .apps-link:hover { background: var(--bg); color: var(--teal); }
     .bar-logout {
       font-size: 0.72rem; color: var(--text-3);
       background: none; border: 1px solid var(--border);
@@ -281,6 +301,31 @@
       transition: all 0.15s; letter-spacing: 0.01em;
     }
     .bar-logout:hover { color: var(--text); border-color: rgba(0,0,0,0.14); background: var(--bg); }
+
+    .inbox-icon-wrap {
+      position: relative; display: flex; align-items: center; justify-content: center;
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+      color: var(--text-3); transition: color 0.15s, background 0.15s;
+    }
+    .inbox-icon-wrap:hover { color: var(--teal); background: var(--teal-faint); }
+    .inbox-icon-badge {
+      position: absolute; top: 2px; right: 2px;
+      min-width: 14px; height: 14px; border-radius: 7px;
+      background: var(--teal); color: #fff;
+      font-size: 0.6rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 3px; border: 1.5px solid #fff;
+    }
+    .inbox-icon-tooltip {
+      position: absolute; top: calc(100% + 6px); left: 50%;
+      transform: translateX(-50%);
+      background: var(--navy); color: #fff;
+      font-size: 0.68rem; font-weight: 500;
+      padding: 0.25rem 0.55rem; border-radius: 5px;
+      white-space: nowrap; pointer-events: none;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    .inbox-icon-wrap:hover .inbox-icon-tooltip { opacity: 1; }
 
     /* ── MAIN ─────────────────────────────────────────────────────────────── */
     .portal-main { flex: 1; max-width: 1320px; margin: 0 auto; width: 100%; padding: 2.5rem 2rem 5rem; }
@@ -570,6 +615,19 @@
     .empty-icon { font-size: 1.75rem; margin-bottom: 0.75rem; opacity: 0.3; display: block; }
     .empty-state p { font-size: 0.84rem; line-height: 1.6; }
 
+    /* ── RESOURCES ──────────────────────────────────────────────────────── */
+    .res-link-list { display: flex; flex-direction: column; gap: 0.4rem; }
+    .res-link { display: flex; align-items: center; gap: 0.5rem; font-size: 0.84rem; color: var(--teal-dark); text-decoration: none; padding: 0.3rem 0; border-bottom: 1px solid var(--border-soft); }
+    .res-link:last-child { border-bottom: none; }
+    .res-link:hover { color: var(--teal); }
+    .res-link svg { flex-shrink: 0; color: var(--teal-mid); }
+    .res-contact-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .res-contact { display: flex; flex-direction: column; gap: 0.1rem; padding: 0.45rem 0; border-bottom: 1px solid var(--border-soft); }
+    .res-contact:last-child { border-bottom: none; }
+    .res-contact-name { font-size: 0.84rem; font-weight: 500; color: var(--text); }
+    .res-contact-role { font-size: 0.72rem; color: var(--text-3); }
+    .res-contact-phone { font-size: 0.78rem; color: var(--teal-dark); }
+
     /* ── DIVIDER ─────────────────────────────────────────────────────────── */
     .divider { height: 1px; background: var(--border-soft); margin: 0.25rem 0; }
 
@@ -579,8 +637,7 @@
       .bar-surgeon, .bar-date { display: none; }
       .portal-main { padding: 1.5rem 1.25rem 4rem; }
       .hub-grid, .notes-grid, .settings-grid { grid-template-columns: 1fr; }
-      .tab-label { display: none; }
-      .tab-btn { padding: 0.5rem 0.7rem; }
+      .tab-btn { padding: 0.5rem 0.6rem; }
     }
     /* ── TRACK LIST (Recalls · Follow-ups · No-shows) ── */
     .track-item { display:flex;align-items:flex-start;gap:0.6rem;padding:0.65rem 0;border-bottom:1px solid var(--border-soft); }
@@ -638,38 +695,55 @@
       </div>
 
       <nav class="tab-nav">
-        <button class="tab-btn active" onclick="showTab('hub',this)">
+        <button class="tab-btn" onclick="showTab('celebrate',this)" title="Celebrate">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="7" width="13" height="8" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="3" y="4" width="10" height="3.5" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M8 4V15" stroke="currentColor" stroke-width="1.3"/><path d="M8 4C8 4 6 2 5 3s1 2 3 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 4C8 4 10 2 11 3s-1 2-3 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="tab-label">Celebrate</span>
+        </button>
+        <button class="tab-btn active" onclick="showTab('hub',this)" title="Today's Hub">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.9"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.9"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.45"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.45"/></svg>
           <span class="tab-label">Today's Hub</span>
         </button>
-        <button class="tab-btn" onclick="showTab('schedule',this)">
+        <button class="tab-btn" onclick="showTab('schedule',this)" title="Schedule">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 1v4M11 1v4M1 7h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span class="tab-label">Schedule</span>
         </button>
-        <button class="tab-btn" onclick="showTab('inbox',this)">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 6l7 4 7-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <span class="tab-label">Enquiries</span>
-          <span class="tab-badge" id="inbox-badge" style="display:none"></span>
+        <button class="tab-btn" onclick="showTab('notes',this)" title="Reminders & Announcements">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1a5 5 0 0 1 5 5c0 3-2 5-5 8C5 11 3 9 3 6a5 5 0 0 1 5-5z" stroke="currentColor" stroke-width="1.5"/><circle cx="8" cy="6" r="1.5" fill="currentColor"/></svg>
+          <span class="tab-label">Reminders</span>
         </button>
-        <button class="tab-btn" onclick="showTab('notes',this)">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          <span class="tab-label">Reminders & Announcements</span>
+        <button class="tab-btn" onclick="showTab('log',this)" id="tab-log" title="Daily Log">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="5" cy="11.5" r="1" fill="currentColor" opacity="0.5"/><circle cx="8" cy="11.5" r="1" fill="currentColor" opacity="0.5"/></svg>
+          <span class="tab-label">Daily Log</span>
         </button>
-        <button class="tab-btn" onclick="showTab('ref',this)">
+        <button class="tab-btn" onclick="showTab('resources',this)" title="Resources">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 3.5A1.5 1.5 0 0 1 3.5 2h4L9 3.5H13A1.5 1.5 0 0 1 14.5 5v7A1.5 1.5 0 0 1 13 13.5H3A1.5 1.5 0 0 1 1.5 12V5A1.5 1.5 0 0 1 3 3.5z" stroke="currentColor" stroke-width="1.5"/></svg>
+          <span class="tab-label">Resources</span>
+        </button>
+        <button class="tab-btn" onclick="showTab('ref',this)" title="Quick Reference">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 7v5M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span class="tab-label">Quick Ref</span>
         </button>
-        <button class="tab-btn" onclick="showTab('settings',this)">
+        <button class="tab-btn" onclick="showTab('settings',this)" title="Settings">
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
           <span class="tab-label">Settings</span>
-        </button>
-        <button class="tab-btn" onclick="showTab('referrals',this)">
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 8h5M9 8h5M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="2" cy="8" r="1.5" fill="currentColor" opacity="0.7"/></svg>
-          <span class="tab-label">Referrals</span>
         </button>
       </nav>
 
       <div class="bar-right">
+        <div class="inbox-icon-wrap" onclick="showTab('inbox', null)" title="Enquiries">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 6l7 4 7-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="inbox-icon-badge" id="inbox-badge" style="display:none"></span>
+          <span class="inbox-icon-tooltip">Enquiries</span>
+        </div>
+        <div class="apps-launcher" id="apps-launcher" style="display:none;">
+          <button class="apps-launcher-btn" id="apps-launcher-btn" onclick="appsToggle()" title="Daily Practice Links">
+            Daily Links
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3.5l3 3 3-3"/></svg>
+          </button>
+          <div class="apps-dropdown" id="apps-dropdown">
+            <div class="apps-dropdown-label">Practice Apps</div>
+          </div>
+        </div>
         <span class="bar-surgeon" id="bar-surgeon"></span>
         <span class="bar-date" id="bar-date"></span>
         <button class="bar-logout" onclick="logout()">Sign out</button>
@@ -678,6 +752,81 @@
   </header>
 
   <main class="portal-main">
+
+    <!-- CELEBRATE -->
+    <div id="panel-celebrate" class="tab-panel">
+      <div class="page-header">
+        <div>
+          <p class="page-title">Celebrate</p>
+          <p class="page-sub">Begin each day celebrating something moving</p>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:1.5rem;max-width:640px;">
+
+        <!-- 1. Share Something Moving — Song / Podcast (daily reset) -->
+        <div class="card" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:1.1rem;">
+            <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#ffe4e6,#fce7f3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="#e11d48" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
+            </div>
+            <div>
+              <p style="font-size:0.92rem;font-weight:600;color:var(--text);">Share Something Moving</p>
+              <p style="font-size:0.76rem;color:var(--text-3);margin-top:0.1rem;">Today's song or podcast — resets each morning</p>
+            </div>
+          </div>
+          <div id="cel-player" style="margin-bottom:0.85rem;"></div>
+          <div style="display:flex;gap:0.5rem;">
+            <input id="cel-music-url" type="url" placeholder="Paste a Spotify or Apple Music share link…"
+              class="form-field" style="margin-bottom:0;flex:1;font-size:0.82rem;"
+              onkeydown="if(event.key==='Enter')celSetMusic()">
+            <button onclick="celSetMusic()" style="background:linear-gradient(135deg,#f43f5e,#e11d48);color:#fff;font-size:0.8rem;font-weight:600;border:none;border-radius:var(--radius-sm);padding:0 1.1rem;cursor:pointer;white-space:nowrap;flex-shrink:0;">Set</button>
+          </div>
+          <p style="font-size:0.72rem;color:var(--text-4);margin-top:0.5rem;">Paste an Apple Music or Spotify share link and press Set</p>
+        </div>
+
+        <!-- 2. Share Something Meaningful (daily reset) -->
+        <div class="card" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:1.1rem;">
+            <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#ede9fe,#ddd6fe);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="#7c3aed" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </div>
+            <div>
+              <p style="font-size:0.92rem;font-weight:600;color:var(--text);">Share Something Meaningful</p>
+              <p style="font-size:0.76rem;color:var(--text-3);margin-top:0.1rem;">What's something you would want to bring into everyone's day today?</p>
+            </div>
+          </div>
+          <textarea id="cel-share-text" rows="3" placeholder="What's something worth hearing more often…"
+            class="form-field" style="margin-bottom:0;resize:none;line-height:1.7;"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:0.6rem;">
+            <button onclick="celPostShare()" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;font-size:0.8rem;font-weight:600;border:none;border-radius:var(--radius-sm);padding:0.55rem 1.1rem;cursor:pointer;">Share it ↑</button>
+          </div>
+          <div id="cel-share-display" style="margin-top:0.5rem;"></div>
+        </div>
+
+        <!-- 3. This Week's Light — running wall -->
+        <div class="card" style="padding:1.5rem;">
+          <div style="display:flex;align-items:center;gap:0.85rem;margin-bottom:0.4rem;">
+            <div style="width:40px;height:40px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#fef9c3,#fde68a);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" fill="none" stroke="#d97706" stroke-width="1.75" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m8.66-9H21M3 12H2.34M18.36 5.64l-.707.707M6.343 17.657l-.707.707M18.36 18.36l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+            </div>
+            <div style="flex:1;">
+              <p style="font-size:0.92rem;font-weight:600;color:var(--text);">This Week's Light</p>
+              <p style="font-size:0.76rem;color:var(--text-3);margin-top:0.1rem;">One moment that reminded you why this work matters</p>
+            </div>
+            <button onclick="celClearWall()" style="background:none;border:1px solid var(--border);border-radius:20px;font-size:0.72rem;color:var(--text-4);padding:0.25rem 0.7rem;cursor:pointer;" title="Clear all entries">Clear wall</button>
+          </div>
+          <p style="font-size:0.75rem;color:var(--text-4);margin-bottom:1rem;margin-left:3.1rem;line-height:1.6;">A patient squeezing your hand. A nervous family leaving relieved. A small win that felt enormous. Write it down — these are the things worth keeping.</p>
+          <textarea id="cel-light-text" rows="2" placeholder="What was this week's light?"
+            class="form-field" style="margin-bottom:0;resize:none;line-height:1.7;"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:0.6rem;">
+            <button onclick="celPostLight()" style="background:linear-gradient(135deg,#fde68a,#fcd34d);color:#78350f;font-size:0.8rem;font-weight:600;border:none;border-radius:var(--radius-sm);padding:0.55rem 1.1rem;cursor:pointer;">Add to the wall ↑</button>
+          </div>
+          <div id="cel-light-display" style="margin-top:0.75rem;display:flex;flex-direction:column;gap:0.6rem;"></div>
+        </div>
+
+      </div>
+    </div>
 
     <!-- TODAY'S HUB -->
     <div id="panel-hub" class="tab-panel active">
@@ -698,13 +847,18 @@
         </div>
       </div>
 
-      <!-- THIS WEEK STRIP -->
-      <div class="week-strip-card">
-        <div class="hub-card-header" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">
-          <span class="hub-card-label">This Week</span>
-          <span class="hub-card-badge" id="week-strip-range"></span>
+      <!-- TODAY AT A GLANCE BANNER -->
+      <div id="hub-today-banner" class="week-strip-card" style="margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem;">
+          <div class="hub-card-header" style="margin:0;padding:0;border:none;">
+            <span class="hub-card-label" id="hub-glance-label">Today at a Glance</span>
+          </div>
+          <button onclick="showTab('log', document.getElementById('tab-log'))" style="display:inline-flex;align-items:center;gap:0.35rem;font-size:0.72rem;font-weight:600;color:var(--teal);background:var(--teal-light);border:1px solid rgba(45,158,150,0.2);border-radius:20px;padding:0.28rem 0.8rem;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            Daily Log
+          </button>
         </div>
-        <div class="week-strip" id="hub-week"></div>
+        <div id="hub-today-sessions"><p style="color:var(--text-3);font-size:0.87rem;font-style:italic;">Loading…</p></div>
       </div>
 
       <div class="hub-grid">
@@ -729,15 +883,7 @@
 
         <div class="hub-card">
           <div class="hub-card-header">
-            <span class="hub-card-label">Today</span>
-            <span class="hub-card-badge" id="hub-today-label"></span>
-          </div>
-          <div id="hub-today"><div class="hub-empty">No schedule data</div></div>
-        </div>
-
-        <div class="hub-card">
-          <div class="hub-card-header">
-            <span class="hub-card-label">Quick Links</span>
+            <span class="hub-card-label">Daily Practice Links</span>
           </div>
           <div id="hub-links"><div class="hub-empty">No links configured</div></div>
         </div>
@@ -822,6 +968,39 @@
         </div>
         <div class="cal-grid" id="cal-grid"></div>
       </div>
+
+      <!-- PLANNER -->
+      <div style="margin-top:2.5rem;padding-top:2rem;border-top:1px solid var(--border);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.25rem;">
+          <div>
+            <p style="font-size:1rem;font-weight:600;color:var(--text);font-family:'Playfair Display',serif;letter-spacing:-0.01em;">Planner</p>
+            <p style="font-size:0.8rem;color:var(--text-3);margin-top:0.2rem;">Add patient follow-ups, tasks, or events directly to the shared Outlook calendar.</p>
+          </div>
+          <div id="pp-connection-badge" onclick="ppHandleAuthClick()" style="display:flex;align-items:center;gap:0.4rem;font-size:0.75rem;color:var(--text-3);cursor:pointer;flex-shrink:0;margin-top:0.15rem;padding:0.35rem 0.75rem;border:1px solid var(--border);border-radius:20px;background:var(--surface);box-shadow:var(--shadow-xs);">
+            <span id="pp-status-dot" style="width:7px;height:7px;border-radius:50%;background:#f59e0b;flex-shrink:0;"></span>
+            <span id="pp-status-label">Not signed in</span>
+          </div>
+        </div>
+
+        <div style="max-width:560px;">
+          <div id="pp-notes-container" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+
+          <button onclick="ppAddNote()" style="margin-top:0.75rem;width:100%;border:2px dashed rgba(45,158,150,0.3);background:rgba(45,158,150,0.03);color:var(--teal);border-radius:var(--radius);padding:0.9rem;font-size:0.84rem;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:background 0.15s;"
+            onmouseover="this.style.background='rgba(45,158,150,0.07)'" onmouseout="this.style.background='rgba(45,158,150,0.03)'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+            Add another event
+          </button>
+
+          <button onclick="ppSubmitNotes()" id="pp-submit-btn" style="margin-top:0.6rem;width:100%;background:linear-gradient(135deg,var(--teal) 0%,var(--teal-dark) 100%);color:#fff;font-size:0.88rem;font-weight:600;border:none;border-radius:var(--radius);padding:0.85rem 1.25rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.5rem;"
+            onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Send to Calendar
+          </button>
+
+          <div id="pp-status-msg" style="display:none;margin-top:0.75rem;padding:0.85rem 1rem;border-radius:var(--radius);font-size:0.82rem;font-weight:500;text-align:center;"></div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ENQUIRIES -->
@@ -896,33 +1075,107 @@
       </div>
     </div>
 
-    <!-- REFERRALS -->
-    <div id="panel-referrals" class="tab-panel">
+    <!-- DAILY LOG -->
+    <div id="panel-log" class="tab-panel">
       <div class="page-header">
         <div>
-          <p class="page-title">Referral Sources</p>
-          <p class="page-sub">Track referring practices, referral volume, and post-op communication</p>
+          <p class="page-title">Daily Log</p>
+          <p class="page-sub" id="log-date-sub"></p>
         </div>
-        <button class="btn btn-primary" onclick="openRefModal()">+ Add referrer</button>
       </div>
-      <div class="ref-wrap">
-        <table class="ref-tbl">
-          <thead>
-            <tr>
-              <th style="width:1.5rem;"></th>
-              <th>Practice / Referrer</th>
-              <th>Contact</th>
-              <th>Last Referral</th>
-              <th>Total</th>
-              <th>Post-Op Loop</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="referral-tbody">
-            <tr><td colspan="7" style="text-align:center;padding:2.5rem;color:var(--text-3);font-style:italic;font-size:0.85rem;">No referrers added yet — add your first referring practice above.</td></tr>
-          </tbody>
-        </table>
+
+      <div class="card" style="margin-bottom:1.25rem;padding:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+          <span style="font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--teal);">Add Entry</span>
+          <button id="log-list-toggle" onclick="logToggleListMode()" style="font-size:0.72rem;font-weight:600;font-family:inherit;padding:0.25rem 0.7rem;border-radius:20px;cursor:pointer;border:1.5px solid rgba(45,158,150,0.3);background:transparent;color:var(--teal-mid);transition:all 0.15s;">☐ Checklist</button>
+        </div>
+        <div style="display:flex;gap:0.6rem;align-items:flex-end;">
+          <textarea id="log-input" rows="1"
+            placeholder="What happened today…"
+            maxlength="2000"
+            onkeydown="logHandleKey(event)"
+            oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
+            style="flex:1;font-size:0.88rem;padding:0.65rem 0.9rem;background:var(--teal-faint);border:1px solid rgba(45,158,150,0.15);border-radius:var(--radius-sm);color:var(--text);outline:none;font-family:inherit;resize:none;min-height:42px;max-height:200px;overflow-y:auto;line-height:1.5;transition:border-color 0.18s;"></textarea>
+          <button onclick="logAdd()" id="log-add-btn" style="padding:0.65rem 1.2rem;background:var(--teal);color:#fff;border:none;border-radius:var(--radius-sm);font-size:0.82rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:inherit;transition:opacity 0.15s;">Add</button>
+        </div>
       </div>
+
+      <div id="log-container"><p style="text-align:center;padding:2.5rem;color:var(--text-3);font-size:0.85rem;font-style:italic;">Loading…</p></div>
+    </div>
+
+    <!-- RESOURCES -->
+    <div id="panel-resources" class="tab-panel">
+      <div class="page-header">
+        <div>
+          <p class="page-title">Resources</p>
+          <p class="page-sub">Referring practices, documents, policies, and team contacts</p>
+        </div>
+      </div>
+
+      <!-- REFERRERS -->
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+          <p class="card-title" style="margin:0;">Referring Practices</p>
+          <button class="btn btn-primary btn-sm" onclick="openRefModal()">+ Add referrer</button>
+        </div>
+        <div class="ref-wrap">
+          <table class="ref-tbl">
+            <thead>
+              <tr>
+                <th style="width:1.5rem;"></th>
+                <th>Practice / Referrer</th>
+                <th>Contact</th>
+                <th>Phone</th>
+                <th>Last Referral</th>
+                <th>Total</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="referral-tbody">
+              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-3);font-style:italic;font-size:0.85rem;">No referrers added yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- DOCUMENTS & POLICIES -->
+      <div style="margin-bottom:2rem;">
+        <p class="card-title" style="margin-bottom:0.75rem;">Documents & Policies</p>
+        <div class="hub-grid" id="resources-docs">
+          <div class="card" style="padding:1.25rem;">
+            <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--teal);margin-bottom:0.75rem;">Clinical</p>
+            <div id="docs-clinical" class="res-link-list"><p style="color:var(--text-3);font-size:0.84rem;font-style:italic;">No documents added yet.</p></div>
+          </div>
+          <div class="card" style="padding:1.25rem;">
+            <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--teal);margin-bottom:0.75rem;">Administration</p>
+            <div id="docs-admin" class="res-link-list"><p style="color:var(--text-3);font-size:0.84rem;font-style:italic;">No documents added yet.</p></div>
+          </div>
+          <div class="card" style="padding:1.25rem;">
+            <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--teal);margin-bottom:0.75rem;">Policies</p>
+            <div id="docs-policies" class="res-link-list"><p style="color:var(--text-3);font-size:0.84rem;font-style:italic;">No policies added yet.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TEAM CONTACTS -->
+      <div>
+        <p class="card-title" style="margin-bottom:0.75rem;">Team Contacts</p>
+        <div class="hub-grid" id="resources-contacts">
+          <div class="card" style="padding:1.25rem;">
+            <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--teal);margin-bottom:0.75rem;">Staff</p>
+            <div id="contacts-staff" class="res-contact-list"><p style="color:var(--text-3);font-size:0.84rem;font-style:italic;">No contacts added yet.</p></div>
+          </div>
+          <div class="card" style="padding:1.25rem;">
+            <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--teal);margin-bottom:0.75rem;">Specialists & Anaesthetists</p>
+            <div id="contacts-specialists" class="res-contact-list"><p style="color:var(--text-3);font-size:0.84rem;font-style:italic;">No contacts added yet.</p></div>
+          </div>
+          <div class="card" style="padding:1.25rem;">
+            <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--teal);margin-bottom:0.75rem;">External & Emergency</p>
+            <div id="contacts-external" class="res-contact-list"><p style="color:var(--text-3);font-size:0.84rem;font-style:italic;">No contacts added yet.</p></div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </main>
@@ -957,11 +1210,34 @@
       <label class="form-label">Note <span style="font-weight:400;color:var(--text-3);">— optional</span></label>
       <textarea class="form-field" id="drawer-note" rows="2" placeholder="e.g. morning only, last-minute cancellation…"></textarea>
     </div>
-    <div class="sched-drawer-actions">
+
+    <!-- SCHEDULE ACTIONS -->
+    <div class="sched-drawer-actions" style="margin-bottom:0;">
       <button class="btn btn-danger btn-sm" id="drawer-reset" onclick="resetSchedEdit()" style="display:none;">Reset to default</button>
       <div style="display:flex;gap:0.5rem;">
         <button class="btn btn-ghost" onclick="closeSchedEdit()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveSchedEdit()">Save</button>
+        <button class="btn btn-primary" onclick="saveSchedEdit()">Save schedule</button>
+      </div>
+    </div>
+
+    <!-- BIRTHDAYS -->
+    <div style="border-top:2px solid var(--border);padding-top:1.35rem;margin-top:1.5rem;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">
+        <span class="form-label" style="margin-bottom:0;">🎂 Birthdays</span>
+        <button class="btn btn-ghost btn-sm" onclick="openBdayModal()">+ Add</button>
+      </div>
+      <div id="bday-list"><div class="hub-empty" style="padding:0.4rem 0;font-size:0.8rem;">No birthdays added yet.</div></div>
+      <p style="font-size:0.68rem;color:var(--text-4);margin-top:0.6rem;line-height:1.5;">Countdowns appear in Announcements 10 days before.</p>
+    </div>
+
+    <!-- PRACTICE ANNOUNCEMENTS -->
+    <div style="border-top:1px solid var(--border-soft);padding-top:1.35rem;margin-top:1.25rem;padding-bottom:2rem;">
+      <span class="form-label" style="display:block;margin-bottom:0.6rem;">📢 Post an Announcement</span>
+      <input class="form-field" id="pann-title" type="text" placeholder="Title — e.g. New parking arrangement" style="margin-bottom:0.5rem;">
+      <textarea class="form-field" id="pann-body" rows="2" placeholder="Details… (optional)" style="margin-bottom:0;resize:none;"></textarea>
+      <div style="display:flex;gap:0.5rem;margin-top:0.6rem;">
+        <button onclick="practiceAnnClear()" class="btn btn-ghost btn-sm" style="flex:1;">Clear</button>
+        <button onclick="practiceAnnPost()" class="btn btn-primary btn-sm" style="flex:2;">Post to Announcements →</button>
       </div>
     </div>
   </div>
@@ -1028,6 +1304,52 @@
   </div>
 </div>
 
+<!-- Birthday modal -->
+<div class="modal-overlay" id="bday-modal">
+  <div class="modal">
+    <p class="modal-title">Add a Birthday</p>
+    <p class="modal-sub">Countdowns appear in Announcements starting 10 days before.</p>
+    <label class="form-label">Name</label>
+    <input class="form-field" id="bday-name" type="text" placeholder="e.g. Sarah (Reception)" style="margin-bottom:0.75rem;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0;">
+      <div>
+        <label class="form-label">Month</label>
+        <select class="form-field" id="bday-month" style="margin-bottom:0;">
+          <option value="1">January</option><option value="2">February</option><option value="3">March</option>
+          <option value="4">April</option><option value="5">May</option><option value="6">June</option>
+          <option value="7">July</option><option value="8">August</option><option value="9">September</option>
+          <option value="10">October</option><option value="11">November</option><option value="12">December</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Day</label>
+        <input class="form-field" id="bday-day" type="number" min="1" max="31" placeholder="e.g. 14" style="margin-bottom:0;">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeBdayModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="bdaySave()">Save birthday</button>
+    </div>
+  </div>
+</div>
+
+<!-- Planner sign-in modal -->
+<div class="modal-overlay" id="pp-signin-modal" onclick="if(event.target===this)ppCloseSignin()">
+  <div class="modal" style="text-align:center;">
+    <div style="width:48px;height:48px;border-radius:var(--radius);background:rgba(45,158,150,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color:var(--teal);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+    </div>
+    <p class="modal-title">Connect to Calendar</p>
+    <p class="modal-sub">Sign in with your practice <span id="pp-signin-provider-name">Microsoft</span> account to post events directly to the shared calendar.</p>
+    <button onclick="ppSignIn()" id="pp-signin-provider-btn" style="width:100%;background:linear-gradient(135deg,var(--teal) 0%,var(--teal-dark) 100%);color:#fff;font-size:0.88rem;font-weight:600;border:none;border-radius:var(--radius-sm);padding:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0.6rem;margin-bottom:0.5rem;">
+      <svg width="17" height="17" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Sign in with Microsoft
+    </button>
+    <button onclick="ppCloseSignin()" class="btn btn-ghost" style="width:100%;">Cancel</button>
+    <button id="pp-signout-btn" onclick="ppSignOut()" style="display:none;margin-top:0.6rem;width:100%;background:none;border:none;color:var(--text-4);font-size:0.75rem;cursor:pointer;">Sign out</button>
+  </div>
+</div>
+
 <!-- No-show modal -->
 <div class="modal-overlay" id="ns-modal">
   <div class="modal">
@@ -1087,11 +1409,37 @@ const PRACTICE = {
   staffNote: '',
   password:  'portal2025',
   quickLinks: [
-    // { label: 'Practice System', url: 'https://...', icon: '🏥' },
-    // { label: 'Booking',         url: 'https://...', icon: '📅' },
+    // { label: 'Practice System', url: 'https://...' },
+    // { label: 'Online Bookings',  url: 'https://...' },
+    // { label: 'Billing',          url: 'https://...' },
+    // { label: 'Scan Portal',      url: 'https://...' },
   ],
   supabase: { url: '', key: '' },
-  features: { schedule: true, inbox: true, notes: true, ref: true, settings: true },
+  features: { schedule: true, inbox: true, notes: true, ref: true, settings: true, log: true },
+  resources: {
+    docs: {
+      clinical:  [], // { label: 'Consent Form', url: 'https://...' }
+      admin:     [], // { label: 'Fee Schedule', url: 'https://...' }
+      policies:  [], // { label: 'Privacy Policy', url: 'https://...' }
+    },
+    contacts: {
+      staff:       [], // { name: 'Jane Smith', role: 'Practice Manager', phone: '(555) 111-2222' }
+      specialists: [], // { name: 'Dr. Jones', role: 'Anaesthetist', phone: '(555) 333-4444' }
+      external:    [], // { name: 'Emergency Line', role: '', phone: '000' }
+    },
+  },
+  planner: {
+    provider:      'microsoft',           // 'microsoft' | 'google'
+    // Microsoft 365 / Outlook
+    msalClientId:  '',                    // Azure App Registration client ID
+    msalTenantId:  '',                    // Azure tenant ID (or 'common')
+    calendarEmail: '',                    // shared mailbox e.g. 'admin@yourpractice.com' (or '' for signed-in user's calendar)
+    timezone:      'Eastern Standard Time', // Windows timezone name — see: https://aka.ms/timezone
+    // Google Calendar
+    googleClientId: '',                   // Google Cloud OAuth 2.0 client ID
+    googleCalendarId: 'primary',          // calendar ID — 'primary' or a specific calendar email
+    googleTimezone:   'America/New_York', // IANA timezone name e.g. 'America/Chicago', 'America/Los_Angeles'
+  },
 };
 
 // ── SUPABASE ──────────────────────────────────────────────────────────────────
@@ -1126,6 +1474,7 @@ async function initPortal() {
     .slice(0, 2).join('');
   document.getElementById('login-monogram').textContent = initials;
   document.getElementById('bar-mark').textContent       = initials;
+  appsInit();
 
   document.getElementById('login-name').textContent    = PRACTICE.name;
   document.getElementById('bar-name').textContent      = PRACTICE.name;
@@ -1142,7 +1491,6 @@ async function initPortal() {
   document.getElementById('hub-greeting').textContent  = h < 12 ? 'Good morning.' : h < 17 ? 'Good afternoon.' : 'Good evening.';
   document.getElementById('hub-date').textContent      = now.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
   document.getElementById('bar-date').textContent      = now.toLocaleDateString('en-US', { month:'short', day:'numeric' });
-  document.getElementById('hub-today-label').textContent = now.toLocaleDateString('en-US', { weekday:'long' });
 
   // Staff note
   if (PRACTICE.staffNote) {
@@ -1152,8 +1500,9 @@ async function initPortal() {
   }
 
   // Hide disabled features
-  const tabs = ['schedule','inbox','notes','ref','settings'];
-  tabs.forEach((id, i) => { if (!PRACTICE.features[id]) document.querySelectorAll('.tab-btn')[i+1].style.display='none'; });
+  const tabs = ['schedule','inbox','notes','ref','settings','referrals','log'];
+  tabs.forEach(id => { if (!PRACTICE.features[id] && PRACTICE.features[id] !== undefined) document.getElementById('tab-'+id)?.style.setProperty('display','none'); });
+  if (!PRACTICE.features.log) document.getElementById('tab-log').style.display = 'none';
 
   renderQuickLinks();
   supaInit();
@@ -1168,11 +1517,12 @@ async function initPortal() {
 
   await schedInit();
   await holidayInit();
-  renderWeekHub();
+  renderTodayBanner();
   renderPatternView();
   renderMonth(_calYear, _calMonth);
   await krInit();
   await annInit();
+  bdayInit();
   await recallInit();
   await fuInit();
   await nsInit();
@@ -1189,10 +1539,13 @@ function showTab(name, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`panel-${name}`).classList.add('active');
   if (btn) btn.classList.add('active');
+  if (name === 'hub')       renderTodayBanner();
+  if (name === 'celebrate') celInit();
   if (name === 'inbox')     inboxLoad();
   if (name === 'notes')     { krInit(); annRender(); }
-  if (name === 'schedule')  { renderPatternView(); renderMonth(_calYear, _calMonth); }
-  if (name === 'referrals') referralRender();
+  if (name === 'schedule')  { renderPatternView(); renderMonth(_calYear, _calMonth); bdayRender(); if (_ppCount === 0) { ppAddNote(); } ppInitAuth(); }
+  if (name === 'resources') { referralRender(); resourcesInit(); }
+  if (name === 'log')       logInit();
 }
 
 // ── KEY REMINDERS ─────────────────────────────────────────────────────────────
@@ -1307,6 +1660,56 @@ async function confirmDelete() {
   closeDelModal(); inboxUpdateBadge(); inboxRenderHub();
 }
 function inboxUpdateBadge(n) { const el=document.getElementById('inbox-badge'); if(n>0){el.textContent=n;el.style.display='';}else el.style.display='none'; }
+
+// ── TODAY AT A GLANCE BANNER ──────────────────────────────────────────────────
+function renderTodayBanner() {
+  const el = document.getElementById('hub-today-sessions');
+  if (!el) return;
+
+  const today = new Date();
+  const dow   = today.getDay();
+
+  // Label: surgeon name + day
+  const labelEl = document.getElementById('hub-glance-label');
+  if (labelEl) labelEl.textContent = `${PRACTICE.surgeon} · Today at a Glance`;
+
+  // Weekend
+  if (dow === 0 || dow === 6) {
+    el.innerHTML = `<p style="color:var(--text-3);font-size:0.9rem;font-style:italic;">Weekend — no sessions scheduled.</p>`;
+    return;
+  }
+
+  const day = schedGetDay(today);
+
+  const typeLabel = { clinic:'Clinic', hospital:'Hospital', theatre:'Theatre', half:'Half Day', off:'Off', closed:'Closed' };
+
+  function sessionHtml(slot, period) {
+    if (!slot || slot.location === 'Off' || slot.type === 'off') {
+      return `<div style="display:flex;align-items:center;gap:0.75rem;">
+        <span style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-4);width:1.6rem;">${period}</span>
+        <span style="font-size:0.84rem;color:var(--text-4);font-style:italic;">Off</span>
+      </div>`;
+    }
+    const si    = SCHED_TYPES[slot.type] || SCHED_TYPES.clinic;
+    const tLabel = typeLabel[slot.type] || slot.type || '';
+    return `<div style="display:flex;align-items:center;gap:0.75rem;">
+      <span style="font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--teal);width:1.6rem;">${period}</span>
+      <span style="font-size:0.95rem;font-weight:600;color:var(--text);">${slot.location}</span>
+      ${tLabel ? `<span style="font-size:0.7rem;font-weight:600;color:${si.color};background:${si.bg};border-radius:20px;padding:0.15rem 0.6rem;">${tLabel}</span>` : ''}
+    </div>`;
+  }
+
+  const amHtml = sessionHtml(day.am, 'AM');
+  const pmHtml = sessionHtml(day.pm, 'PM');
+
+  const note = day.note ? `
+    <div style="margin-top:0.85rem;padding-top:0.85rem;border-top:1px solid var(--border-soft);">
+      <p style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--teal);margin-bottom:0.3rem;">Note</p>
+      <p style="font-size:0.84rem;color:var(--text-2);line-height:1.6;">${day.note}</p>
+    </div>` : '';
+
+  el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.5rem;">${amHtml}${pmHtml}</div>${note}`;
+}
 
 // ── SCHEDULE ──────────────────────────────────────────────────────────────────
 const SCHED_KEY = 'scheduleOverrides';
@@ -1851,7 +2254,7 @@ function renderQuickLinks() {
   el.innerHTML=PRACTICE.quickLinks.map(l=>`
     <div class="hub-item">
       <span class="hub-dot muted"></span>
-      <div class="hub-item-main"><a href="${l.url}" target="_blank" style="color:var(--teal);text-decoration:none;font-size:0.84rem;font-weight:500;">${l.icon?l.icon+' ':''}${l.label}</a></div>
+      <div class="hub-item-main"><a href="${l.url}" target="_blank" style="color:var(--teal);text-decoration:none;font-size:0.84rem;font-weight:500;">${l.label}</a></div>
     </div>`).join('');
 }
 
@@ -2103,8 +2506,711 @@ async function respondedPersist() {
   else localStorage.setItem(RESPONDED_KEY, j);
 }
 
+// ── RESOURCES ─────────────────────────────────────────────────────────────────
+function resourcesInit() {
+  const R = PRACTICE.resources || {};
+
+  function renderLinks(containerId, items) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!items || !items.length) return;
+    el.innerHTML = items.map(item => `
+      <a class="res-link" href="${item.url || '#'}" target="_blank" rel="noopener">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="10" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        ${item.label}
+      </a>`).join('');
+  }
+
+  function renderContacts(containerId, items) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!items || !items.length) return;
+    el.innerHTML = items.map(c => `
+      <div class="res-contact">
+        <span class="res-contact-name">${c.name}</span>
+        ${c.role ? `<span class="res-contact-role">${c.role}</span>` : ''}
+        ${c.phone ? `<span class="res-contact-phone">${c.phone}</span>` : ''}
+      </div>`).join('');
+  }
+
+  renderLinks('docs-clinical',  R.docs?.clinical);
+  renderLinks('docs-admin',     R.docs?.admin);
+  renderLinks('docs-policies',  R.docs?.policies);
+  renderContacts('contacts-staff',       R.contacts?.staff);
+  renderContacts('contacts-specialists', R.contacts?.specialists);
+  renderContacts('contacts-external',    R.contacts?.external);
+}
+
+// ── DAILY LOG ─────────────────────────────────────────────────────────────────
+let _logListMode = false;
+
+function logInit() {
+  document.getElementById('log-date-sub').textContent =
+    new Date().toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  logLoad();
+}
+
+function logToggleListMode() {
+  _logListMode = !_logListMode;
+  const btn   = document.getElementById('log-list-toggle');
+  const input = document.getElementById('log-input');
+  btn.textContent = _logListMode ? '☑ Checklist' : '☐ Checklist';
+  btn.style.background = _logListMode ? 'rgba(45,158,150,0.1)' : 'transparent';
+  btn.style.borderColor = _logListMode ? 'var(--teal)' : 'rgba(45,158,150,0.3)';
+  input.placeholder = _logListMode ? 'One item per line — Cmd+Enter to save…' : 'What happened today…';
+  input.focus();
+}
+
+function logHandleKey(e) {
+  if (_logListMode) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); logAdd(); }
+  } else {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); logAdd(); }
+  }
+  setTimeout(() => { e.target.style.height = 'auto'; e.target.style.height = e.target.scrollHeight + 'px'; }, 0);
+}
+
+async function logAdd() {
+  const input = document.getElementById('log-input');
+  const btn   = document.getElementById('log-add-btn');
+  const raw   = input.value.trim();
+  if (!raw) { input.focus(); return; }
+
+  let text = raw;
+  if (_logListMode) {
+    text = raw.split('\n').map(l=>l.trim()).filter(l=>l).map(l=>`- [ ] ${l}`).join('\n');
+  }
+
+  btn.disabled = true;
+  const todayIso = new Date().toISOString().slice(0,10);
+  if (_supa) {
+    const { error } = await _supa.from('daily_log').insert({ date: todayIso, entry: text });
+    if (error) { alert('Could not save — ' + error.message); btn.disabled = false; return; }
+  } else {
+    const entries = JSON.parse(localStorage.getItem('daily_log') || '[]');
+    entries.unshift({ id: Date.now().toString(), date: todayIso, entry: text, created_at: new Date().toISOString() });
+    localStorage.setItem('daily_log', JSON.stringify(entries));
+  }
+  btn.disabled = false;
+  input.value = ''; input.style.height = 'auto'; input.focus();
+  logLoad();
+}
+
+async function logLoad() {
+  const container = document.getElementById('log-container');
+  let data;
+  if (_supa) {
+    const { data: rows, error } = await _supa.from('daily_log').select('*').order('created_at', { ascending: false }).limit(100);
+    if (error) { container.innerHTML = `<p style="text-align:center;padding:2rem;color:var(--text-3);">Couldn't load — ${error.message}</p>`; return; }
+    data = rows;
+  } else {
+    data = JSON.parse(localStorage.getItem('daily_log') || '[]');
+  }
+
+  if (!data.length) { container.innerHTML = '<p style="text-align:center;padding:3rem;color:var(--text-3);font-style:italic;font-size:0.85rem;">Nothing logged yet — add your first entry above.</p>'; return; }
+
+  const todayIso = new Date().toISOString().slice(0,10);
+  const groups = {};
+  data.forEach(e => { if (!groups[e.date]) groups[e.date] = []; groups[e.date].push(e); });
+  const fmtDate = iso => new Date(iso+'T12:00:00').toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long' });
+
+  container.innerHTML = Object.keys(groups).sort().reverse().map(date => {
+    const isToday = date === todayIso;
+    const label   = isToday ? `Today — ${fmtDate(date)}` : fmtDate(date);
+    return `<div style="margin-bottom:1.1rem;">
+      <p style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:${isToday?'var(--teal)':'var(--text-3)'};margin-bottom:0.55rem;padding-left:0.25rem;">${label}</p>
+      ${groups[date].map(e => logRenderEntry(e)).join('')}
+    </div>`;
+  }).join('');
+}
+
+function logIsChecklist(text) { return text.split('\n').some(l => /^- \[[ x]\] /i.test(l)); }
+
+function logRenderEntry(e) {
+  if (logIsChecklist(e.entry)) {
+    const lines = e.entry.split('\n').filter(l=>l.trim());
+    const total = lines.length;
+    const done  = lines.filter(l=>/^- \[x\] /i.test(l)).length;
+    const allDone = total > 0 && done === total;
+    const items = lines.map((l,i) => {
+      const checked = /^- \[x\] /i.test(l);
+      const text    = logEsc(l.replace(/^- \[[ x]\] /i,''));
+      return `<div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.18rem 0;cursor:pointer;" onclick="logToggleItem('${e.id}',${i})">
+        <div style="width:16px;height:16px;border-radius:4px;flex-shrink:0;border:1.5px solid ${checked?'var(--teal)':'rgba(45,158,150,0.3)'};background:${checked?'var(--teal)':'#fff'};margin-top:0.15rem;display:flex;align-items:center;justify-content:center;">
+          ${checked?'<svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </div>
+        <span style="font-size:0.88rem;color:${checked?'var(--text-3)':'var(--text)'};${checked?'text-decoration:line-through;':''};line-height:1.55;flex:1;">${text}</span>
+      </div>`;
+    }).join('');
+    return `<div class="card" id="log-entry-${e.id}" style="padding:0.85rem 1rem;margin-bottom:0.4rem;${allDone?'background:rgba(236,253,245,0.9);border-color:rgba(34,197,94,0.2);':''}">
+      <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+        <div style="flex:1;">${items}
+          <p style="font-size:0.68rem;color:var(--text-3);margin-top:0.3rem;">${new Date(e.created_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})} · ${done}/${total} done</p>
+        </div>
+        <button onclick="logDelete('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-4);font-size:1.1rem;padding:0.1rem 0.2rem;flex-shrink:0;transition:color 0.15s;" onmouseover="this.style.color='#e57373'" onmouseout="this.style.color='var(--text-4)'">×</button>
+      </div>
+    </div>`;
+  }
+  return `<div class="card" id="log-entry-${e.id}" style="padding:0.85rem 1rem;margin-bottom:0.4rem;">
+    <div style="display:flex;align-items:flex-start;gap:0.75rem;">
+      <div style="width:6px;height:6px;border-radius:50%;background:var(--teal);flex-shrink:0;margin-top:0.52rem;"></div>
+      <div style="flex:1;">
+        <p style="font-size:0.88rem;color:var(--text);line-height:1.55;white-space:pre-wrap;">${logEsc(e.entry)}</p>
+        <p style="font-size:0.68rem;color:var(--text-3);margin-top:0.2rem;">${new Date(e.created_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true})}</p>
+      </div>
+      <button onclick="logDelete('${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-4);font-size:1.1rem;padding:0.1rem 0.2rem;flex-shrink:0;transition:color 0.15s;" onmouseover="this.style.color='#e57373'" onmouseout="this.style.color='var(--text-4)'">×</button>
+    </div>
+  </div>`;
+}
+
+async function logToggleItem(entryId, lineIdx) {
+  if (_supa) {
+    const { data } = await _supa.from('daily_log').select('entry').eq('id', entryId).single();
+    if (!data) return;
+    const lines = data.entry.split('\n');
+    const l = lines[lineIdx];
+    lines[lineIdx] = /^- \[x\] /i.test(l) ? l.replace(/^- \[x\] /i,'- [ ] ') : l.replace(/^- \[ \] /i,'- [x] ');
+    await _supa.from('daily_log').update({ entry: lines.join('\n') }).eq('id', entryId);
+  } else {
+    const entries = JSON.parse(localStorage.getItem('daily_log') || '[]');
+    const entry = entries.find(e=>e.id===entryId); if (!entry) return;
+    const lines = entry.entry.split('\n');
+    const l = lines[lineIdx];
+    lines[lineIdx] = /^- \[x\] /i.test(l) ? l.replace(/^- \[x\] /i,'- [ ] ') : l.replace(/^- \[ \] /i,'- [x] ');
+    entry.entry = lines.join('\n');
+    localStorage.setItem('daily_log', JSON.stringify(entries));
+  }
+  logLoad();
+}
+
+async function logDelete(id) {
+  if (_supa) { await _supa.from('daily_log').delete().eq('id', id); }
+  else { const e = JSON.parse(localStorage.getItem('daily_log')||'[]'); localStorage.setItem('daily_log', JSON.stringify(e.filter(x=>x.id!==id))); }
+  document.getElementById('log-entry-'+id)?.remove();
+}
+
+function logEsc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 // ── UTILS ─────────────────────────────────────────────────────────────────────
 function fmt(iso) { if(!iso) return ''; return new Date(iso).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+
+// ── CELEBRATE ─────────────────────────────────────────────────────────────────
+const CEL_MUSIC_KEY   = 'cel_music';
+const CEL_SHARE_KEY   = 'cel_meaningful';
+const CEL_WALL_KEY    = 'cel_wall';
+const CEL_WALL_MAX    = 50;
+
+function celTodayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function celInit() {
+  const today = celTodayStr();
+
+  // Music — daily reset
+  const music = JSON.parse(localStorage.getItem(CEL_MUSIC_KEY) || 'null');
+  if (music?.date === today && music?.url) {
+    celRenderMusic(music.url);
+  } else {
+    document.getElementById('cel-player').innerHTML = '';
+  }
+
+  // Share Something Meaningful — daily reset
+  const share = JSON.parse(localStorage.getItem(CEL_SHARE_KEY) || 'null');
+  if (share?.date === today) {
+    celRenderShare(share.text, share.time);
+  } else {
+    document.getElementById('cel-share-display').innerHTML = '';
+  }
+
+  // This Week's Light — running wall
+  celRenderWall();
+}
+
+function celSetMusic() {
+  const raw = (document.getElementById('cel-music-url').value || '').trim();
+  let url = '';
+  if (raw.includes('open.spotify.com')) {
+    url = raw.replace(/open\.spotify\.com\/(track|album|playlist|episode)\//, 'open.spotify.com/embed/$1/').split('?')[0];
+  } else if (raw.includes('music.apple.com')) {
+    url = raw.replace('https://music.apple.com/', 'https://embed.music.apple.com/');
+  }
+  if (!url) return;
+  localStorage.setItem(CEL_MUSIC_KEY, JSON.stringify({ url, date: celTodayStr() }));
+  celRenderMusic(url);
+  document.getElementById('cel-music-url').value = '';
+}
+
+function celRenderMusic(url) {
+  const el = document.getElementById('cel-player');
+  if (!el || !url) return;
+  const isApple = url.includes('embed.music.apple');
+  el.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="${isApple ? 175 : 152}" style="width:100%;border-radius:10px;overflow:hidden;display:block;" ${isApple ? 'sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"' : ''} src="${url}"></iframe>`;
+}
+
+function celPostShare() {
+  const text = (document.getElementById('cel-share-text').value || '').trim();
+  if (!text) return;
+  const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  localStorage.setItem(CEL_SHARE_KEY, JSON.stringify({ text, date: celTodayStr(), time }));
+  document.getElementById('cel-share-text').value = '';
+  celRenderShare(text, time);
+}
+
+function celRenderShare(text, time) {
+  const el = document.getElementById('cel-share-display');
+  if (!el) return;
+  el.innerHTML = `<div style="background:linear-gradient(135deg,rgba(139,92,246,0.07),rgba(109,40,217,0.04));border:1px solid rgba(139,92,246,0.15);border-radius:10px;padding:0.9rem 1.1rem;margin-top:0.5rem;"><p style="font-size:0.87rem;color:#3730a3;line-height:1.75;font-style:italic;">"${text}"</p><p style="font-size:0.68rem;color:#8b5cf6;margin-top:0.4rem;opacity:0.8;">Today · ${time || ''}</p></div>`;
+}
+
+function celPostLight() {
+  const text = (document.getElementById('cel-light-text').value || '').trim();
+  if (!text) return;
+  const wall = JSON.parse(localStorage.getItem(CEL_WALL_KEY) || '[]');
+  const entry = {
+    id:   Date.now().toString(),
+    text,
+    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+  };
+  wall.unshift(entry);
+  if (wall.length > CEL_WALL_MAX) wall.length = CEL_WALL_MAX;
+  localStorage.setItem(CEL_WALL_KEY, JSON.stringify(wall));
+  document.getElementById('cel-light-text').value = '';
+  celRenderWall();
+}
+
+function celRemoveEntry(id) {
+  const wall = JSON.parse(localStorage.getItem(CEL_WALL_KEY) || '[]').filter(e => e.id !== id);
+  localStorage.setItem(CEL_WALL_KEY, JSON.stringify(wall));
+  celRenderWall();
+}
+
+function celClearWall() {
+  if (!confirm('Clear the entire wall? This cannot be undone.')) return;
+  localStorage.removeItem(CEL_WALL_KEY);
+  celRenderWall();
+}
+
+function celRenderWall() {
+  const el   = document.getElementById('cel-light-display');
+  if (!el) return;
+  const wall = JSON.parse(localStorage.getItem(CEL_WALL_KEY) || '[]');
+  if (!wall.length) {
+    el.innerHTML = '<p style="font-size:0.82rem;color:var(--text-4);font-style:italic;text-align:center;padding:0.5rem 0;">Nothing on the wall yet — be the first to add a light.</p>';
+    return;
+  }
+  el.innerHTML = wall.map(e => `
+    <div style="background:linear-gradient(135deg,rgba(251,191,36,0.09),rgba(245,158,11,0.05));border:1px solid rgba(245,158,11,0.22);border-radius:10px;padding:0.85rem 1rem;display:flex;align-items:flex-start;gap:0.6rem;">
+      <p style="font-size:0.87rem;color:#78350f;line-height:1.72;flex:1;">${e.text}</p>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0;">
+        <p style="font-size:0.68rem;color:#d97706;opacity:0.8;white-space:nowrap;">${e.date}</p>
+        <button onclick="celRemoveEntry('${e.id}')" style="background:none;border:none;color:rgba(217,119,6,0.4);cursor:pointer;font-size:0.8rem;padding:0;line-height:1;" title="Remove">×</button>
+      </div>
+    </div>`).join('');
+}
+
+// ── PLANNER (Calendar Event Scheduler) ───────────────────────────────────────
+let _ppMsal            = null;
+let _ppAccount         = null;   // Microsoft account object
+let _ppGoogleClient    = null;   // Google token client
+let _ppGoogleToken     = null;   // Google access token string
+let _ppCount           = 0;
+
+// ── Auth — shared entry point ─────────────────────────────────────────────────
+async function ppInitAuth() {
+  const provider = PRACTICE.planner.provider || 'microsoft';
+  if (provider === 'google') ppInitGoogle();
+  else await ppInitMsal();
+}
+
+function ppIsConnected() {
+  const provider = PRACTICE.planner.provider || 'microsoft';
+  return provider === 'google' ? !!_ppGoogleToken : !!_ppAccount;
+}
+
+function ppSetConnected(label) {
+  document.getElementById('pp-status-dot').style.background = '#22c55e';
+  document.getElementById('pp-status-label').textContent = label;
+  document.getElementById('pp-signout-btn').style.display = 'block';
+}
+
+function ppSetDisconnected() {
+  document.getElementById('pp-status-dot').style.background = '#f59e0b';
+  document.getElementById('pp-status-label').textContent = 'Not signed in';
+  document.getElementById('pp-signout-btn').style.display = 'none';
+}
+
+// ── Microsoft 365 ─────────────────────────────────────────────────────────────
+async function ppInitMsal() {
+  if (_ppMsal || !PRACTICE.planner.msalClientId) return;
+  _ppMsal = new msal.PublicClientApplication({
+    auth: {
+      clientId:    PRACTICE.planner.msalClientId,
+      authority:   `https://login.microsoftonline.com/${PRACTICE.planner.msalTenantId || 'common'}`,
+      redirectUri: window.location.origin + window.location.pathname,
+    },
+    cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+  });
+  await _ppMsal.initialize();
+  const accounts = _ppMsal.getAllAccounts();
+  if (accounts.length > 0) {
+    _ppAccount = accounts[0];
+    ppSetConnected(_ppAccount.name || _ppAccount.username);
+  }
+}
+
+async function ppMsalSignIn() {
+  if (!_ppMsal) { ppShowStatus('Planner not configured — set msalClientId in PRACTICE.planner.', 'error'); return; }
+  try {
+    const result = await _ppMsal.loginPopup({ scopes: ['Calendars.ReadWrite', 'Calendars.ReadWrite.Shared'] });
+    _ppAccount = result.account;
+    ppSetConnected(_ppAccount.name || _ppAccount.username);
+  } catch {
+    ppShowStatus('Sign-in was cancelled or failed. Try again.', 'error');
+  }
+}
+
+async function ppGetMsalToken() {
+  const scopes = ['Calendars.ReadWrite', 'Calendars.ReadWrite.Shared'];
+  try {
+    const r = await _ppMsal.acquireTokenSilent({ scopes, account: _ppAccount });
+    return r.accessToken;
+  } catch {
+    const r = await _ppMsal.acquireTokenPopup({ scopes });
+    return r.accessToken;
+  }
+}
+
+// ── Google Calendar ───────────────────────────────────────────────────────────
+function ppInitGoogle() {
+  if (_ppGoogleClient || !PRACTICE.planner.googleClientId) return;
+  _ppGoogleClient = google.accounts.oauth2.initTokenClient({
+    client_id: PRACTICE.planner.googleClientId,
+    scope:     'https://www.googleapis.com/auth/calendar.events',
+    callback:  (resp) => {
+      if (resp.access_token) {
+        _ppGoogleToken = resp.access_token;
+        ppSetConnected('Google Calendar');
+      }
+    },
+  });
+}
+
+function ppGoogleSignIn() {
+  if (!_ppGoogleClient) ppInitGoogle();
+  if (!_ppGoogleClient) { ppShowStatus('Planner not configured — set googleClientId in PRACTICE.planner.', 'error'); return; }
+  _ppGoogleClient.requestAccessToken();
+}
+
+// ── Unified sign-in / sign-out ────────────────────────────────────────────────
+function ppHandleAuthClick() {
+  const modal = document.getElementById('pp-signin-modal');
+  const provider = PRACTICE.planner.provider || 'microsoft';
+  // Render the correct sign-in button label
+  document.getElementById('pp-signin-provider-btn').innerHTML = provider === 'google'
+    ? `<svg width="17" height="17" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.2l6.8-6.8C35.8 2.5 30.2 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.4 13 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17z"/><path fill="#FBBC05" d="M10.6 28.6A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.1.7-4.6l-7.9-6.1A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.5 10.8l8.1-6.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.2-8.4 2.2-6.2 0-11.5-4.2-13.4-9.9l-8.1 6.2C6.5 42.5 14.6 48 24 48z"/></svg> Sign in with Google`
+    : `<svg width="17" height="17" viewBox="0 0 21 21" fill="none"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg> Sign in with Microsoft`;
+  document.getElementById('pp-signin-provider-name').textContent = provider === 'google' ? 'Google' : 'Microsoft';
+  modal.classList.add('open');
+}
+
+function ppCloseSignin() {
+  document.getElementById('pp-signin-modal').classList.remove('open');
+}
+
+async function ppSignIn() {
+  ppCloseSignin();
+  const provider = PRACTICE.planner.provider || 'microsoft';
+  if (provider === 'google') ppGoogleSignIn();
+  else await ppMsalSignIn();
+}
+
+function ppSignOut() {
+  ppCloseSignin();
+  const provider = PRACTICE.planner.provider || 'microsoft';
+  if (provider === 'google') {
+    if (_ppGoogleToken) google.accounts.oauth2.revoke(_ppGoogleToken, () => {});
+    _ppGoogleToken = null;
+  } else {
+    _ppAccount = null;
+    if (_ppMsal) _ppMsal.logoutPopup();
+  }
+  ppSetDisconnected();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function ppTodayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function ppAddMinutes(time, mins) {
+  const [h, m] = time.split(':').map(Number);
+  const d = new Date(0, 0, 0, h, m + mins);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+
+// ── Event cards ───────────────────────────────────────────────────────────────
+function ppAddNote() {
+  _ppCount++;
+  const id  = `pp-note-${_ppCount}`;
+  const num = _ppCount;
+  const card = document.createElement('div');
+  card.id = id;
+  card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden;';
+  card.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0.7rem 1rem 0.4rem;">
+      <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-3);">Event ${num}</span>
+      ${num > 1 ? `<button onclick="ppRemoveNote('${id}')" style="background:none;border:none;color:var(--text-4);cursor:pointer;padding:0.2rem;font-size:1rem;line-height:1;" title="Remove">×</button>` : ''}
+    </div>
+    <div style="padding:0 1rem 1rem;display:flex;flex-direction:column;gap:0.5rem;">
+      <input type="text" placeholder="Title or patient reference" class="form-field pp-note-title" style="margin-bottom:0;">
+      <textarea placeholder="Details — what needs to happen, who to contact…" rows="2" class="form-field pp-note-body" style="margin-bottom:0;min-height:64px;"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.5rem;">
+        <div>
+          <label class="form-label" style="margin-bottom:0.3rem;">Date</label>
+          <input type="date" min="${ppTodayStr()}" value="${ppTodayStr()}" class="form-field pp-note-date" style="margin-bottom:0;">
+        </div>
+        <div>
+          <label class="form-label" style="margin-bottom:0.3rem;">Time</label>
+          <input type="time" value="09:00" class="form-field pp-note-time" style="margin-bottom:0;">
+        </div>
+        <div>
+          <label class="form-label" style="margin-bottom:0.3rem;">Duration</label>
+          <select class="form-field pp-note-duration" style="margin-bottom:0;">
+            <option value="30">30 min</option>
+            <option value="60" selected>1 hr</option>
+            <option value="120">2 hr</option>
+          </select>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('pp-notes-container').appendChild(card);
+  card.querySelector('.pp-note-title').focus();
+}
+
+function ppRemoveNote(id) {
+  document.getElementById(id).remove();
+}
+
+// ── Submit ────────────────────────────────────────────────────────────────────
+async function ppSubmitNotes() {
+  if (!ppIsConnected()) {
+    const provider = PRACTICE.planner.provider || 'microsoft';
+    ppShowStatus(`Sign in with ${provider === 'google' ? 'Google' : 'Microsoft'} first — tap the badge above.`, 'error');
+    return;
+  }
+  const cards = document.querySelectorAll('#pp-notes-container > div');
+  if (!cards.length) { ppShowStatus('Add at least one event before sending.', 'error'); return; }
+  const events = [];
+  let invalid = false;
+  cards.forEach(card => {
+    const title    = card.querySelector('.pp-note-title').value.trim();
+    const body     = card.querySelector('.pp-note-body').value.trim();
+    const date     = card.querySelector('.pp-note-date').value;
+    const time     = card.querySelector('.pp-note-time').value || '09:00';
+    const duration = parseInt(card.querySelector('.pp-note-duration').value, 10);
+    if (!title || !date) { invalid = true; return; }
+    events.push({ title, body, date, time, duration });
+  });
+  if (invalid) { ppShowStatus('Please fill in title and date for all events.', 'error'); return; }
+
+  const btn = document.getElementById('pp-submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const provider = PRACTICE.planner.provider || 'microsoft';
+
+  try {
+    if (provider === 'google') {
+      const tz  = PRACTICE.planner.googleTimezone || 'America/New_York';
+      const cal = PRACTICE.planner.googleCalendarId || 'primary';
+      await Promise.all(events.map(async ev => {
+        const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal)}/events`, {
+          method:  'POST',
+          headers: { 'Authorization': `Bearer ${_ppGoogleToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            summary:     ev.title,
+            description: ev.body,
+            start: { dateTime: `${ev.date}T${ev.time}:00`, timeZone: tz },
+            end:   { dateTime: `${ev.date}T${ppAddMinutes(ev.time, ev.duration)}:00`, timeZone: tz },
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(`Google Calendar ${res.status}: ${err?.error?.message || res.statusText}`);
+        }
+      }));
+    } else {
+      const token    = await ppGetMsalToken();
+      const endpoint = PRACTICE.planner.calendarEmail
+        ? `https://graph.microsoft.com/v1.0/users/${PRACTICE.planner.calendarEmail}/calendar/events`
+        : 'https://graph.microsoft.com/v1.0/me/calendar/events';
+      const tz = PRACTICE.planner.timezone || 'Eastern Standard Time';
+      await Promise.all(events.map(async ev => {
+        const res = await fetch(endpoint, {
+          method:  'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subject: ev.title,
+            body:    { contentType: 'text', content: ev.body },
+            start:   { dateTime: `${ev.date}T${ev.time}:00`, timeZone: tz },
+            end:     { dateTime: `${ev.date}T${ppAddMinutes(ev.time, ev.duration)}:00`, timeZone: tz },
+          })
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(`Graph API ${res.status}: ${err?.error?.message || res.statusText}`);
+        }
+      }));
+    }
+    ppShowStatus(`${events.length} event${events.length !== 1 ? 's' : ''} sent to the calendar.`, 'success');
+    document.getElementById('pp-notes-container').innerHTML = '';
+    _ppCount = 0;
+    ppAddNote();
+  } catch (e) {
+    ppShowStatus(e.message || 'Something went wrong. Check your connection and try again.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Send to Calendar`;
+  }
+}
+
+function ppShowStatus(msg, type) {
+  const el = document.getElementById('pp-status-msg');
+  el.textContent = msg;
+  el.style.background  = type === 'success' ? 'rgba(45,158,150,0.08)' : 'rgba(239,68,68,0.07)';
+  el.style.color       = type === 'success' ? 'var(--teal-dark)' : '#dc2626';
+  el.style.border      = type === 'success' ? '1px solid rgba(45,158,150,0.2)' : '1px solid rgba(239,68,68,0.15)';
+  el.style.display     = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 6000);
+}
+
+// ── BIRTHDAYS & PRACTICE ANNOUNCEMENTS ───────────────────────────────────────
+const BDAYS_KEY = 'practiceBirthdays';
+let _bdays = [];
+
+const MONTH_NAMES = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function bdayInit() {
+  _bdays = JSON.parse(localStorage.getItem(BDAYS_KEY) || '[]');
+  bdayRender();
+  bdayCheckCountdowns();
+}
+
+function bdayRender() {
+  const el = document.getElementById('bday-list');
+  if (!el) return;
+  if (!_bdays.length) { el.innerHTML = '<div class="hub-empty">No birthdays added yet.</div>'; return; }
+  el.innerHTML = _bdays.map(b => {
+    const today = new Date(); today.setHours(0,0,0,0);
+    const yr    = today.getFullYear();
+    let next    = new Date(yr, b.month - 1, b.day); next.setHours(0,0,0,0);
+    if (next < today) next = new Date(yr + 1, b.month - 1, b.day);
+    const days  = Math.round((next - today) / 86400000);
+    const badge = days === 0
+      ? `<span style="font-size:0.7rem;font-weight:700;color:#d97706;background:rgba(251,191,36,0.15);border-radius:20px;padding:0.15rem 0.6rem;">Today! 🎉</span>`
+      : days <= 10
+        ? `<span style="font-size:0.7rem;font-weight:700;color:var(--teal);background:var(--teal-light);border-radius:20px;padding:0.15rem 0.6rem;">${days}d away</span>`
+        : `<span style="font-size:0.7rem;color:var(--text-4);">${MONTH_NAMES[b.month]} ${b.day}</span>`;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.55rem 0;border-bottom:1px solid var(--border-soft);">
+      <span style="font-size:0.85rem;color:var(--text);">🎂 ${b.name}</span>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        ${badge}
+        <button onclick="bdayDelete('${b.id}')" style="background:none;border:none;color:var(--text-4);cursor:pointer;font-size:0.85rem;padding:0 0.2rem;" title="Remove">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function bdayCheckCountdowns() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  _bdays.forEach(b => {
+    const yr  = today.getFullYear();
+    let next  = new Date(yr, b.month - 1, b.day); next.setHours(0,0,0,0);
+    if (next < today) next = new Date(yr + 1, b.month - 1, b.day);
+    const days = Math.round((next - today) / 86400000);
+    if (days <= 10) {
+      const title = days === 0
+        ? `🎂 Today is ${b.name}'s birthday!`
+        : `🎂 ${days} day${days !== 1 ? 's' : ''} until ${b.name}'s birthday`;
+      annAdd({ id: `bday-${b.id}`, type: 'birthday', title, body: '', date: null });
+    }
+  });
+}
+
+function openBdayModal() {
+  document.getElementById('bday-name').value  = '';
+  document.getElementById('bday-month').value = '1';
+  document.getElementById('bday-day').value   = '';
+  document.getElementById('bday-modal').classList.add('open');
+  setTimeout(() => document.getElementById('bday-name').focus(), 100);
+}
+
+function closeBdayModal() {
+  document.getElementById('bday-modal').classList.remove('open');
+}
+
+function bdaySave() {
+  const name  = document.getElementById('bday-name').value.trim();
+  const month = parseInt(document.getElementById('bday-month').value, 10);
+  const day   = parseInt(document.getElementById('bday-day').value, 10);
+  if (!name || !day || day < 1 || day > 31) return;
+  _bdays.push({ id: Date.now().toString(), name, month, day });
+  localStorage.setItem(BDAYS_KEY, JSON.stringify(_bdays));
+  closeBdayModal();
+  bdayRender();
+  bdayCheckCountdowns();
+  annRender();
+}
+
+function bdayDelete(id) {
+  _bdays = _bdays.filter(b => b.id !== id);
+  _ann   = _ann.filter(a => a.id !== `bday-${id}`);
+  localStorage.setItem(BDAYS_KEY, JSON.stringify(_bdays));
+  annPersist();
+  bdayRender();
+  annRender();
+}
+
+function practiceAnnPost() {
+  const title = document.getElementById('pann-title').value.trim();
+  const body  = document.getElementById('pann-body').value.trim();
+  if (!title) return;
+  annAdd({ id: `pann-${Date.now()}`, type: 'practice', title, body, date: new Date().toISOString().split('T')[0] });
+  annRender();
+  document.getElementById('pann-title').value = '';
+  document.getElementById('pann-body').value  = '';
+}
+
+function practiceAnnClear() {
+  document.getElementById('pann-title').value = '';
+  document.getElementById('pann-body').value  = '';
+}
+
+// ── APPS LAUNCHER ─────────────────────────────────────────────────────────────
+function appsInit() {
+  const links = PRACTICE.quickLinks || [];
+  if (!links.length) return;
+  const launcher = document.getElementById('apps-launcher');
+  const dropdown = document.getElementById('apps-dropdown');
+  launcher.style.display = '';
+  dropdown.innerHTML = `<div class="apps-dropdown-label">Daily Practice Links</div>` +
+    links.map(l => `<a class="apps-link" href="${l.url}" target="_blank" rel="noopener noreferrer">${l.label}</a>`).join('');
+}
+
+function appsToggle() {
+  const btn      = document.getElementById('apps-launcher-btn');
+  const dropdown = document.getElementById('apps-dropdown');
+  const isOpen   = dropdown.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#apps-launcher')) {
+    document.getElementById('apps-dropdown')?.classList.remove('open');
+    document.getElementById('apps-launcher-btn')?.classList.remove('open');
+  }
+});
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
