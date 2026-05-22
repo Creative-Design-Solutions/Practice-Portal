@@ -1522,6 +1522,7 @@ async function initPortal() {
   renderMonth(_calYear, _calMonth);
   await krInit();
   await annInit();
+  holidayCheckClosedAnnouncements();
   bdayInit();
   await recallInit();
   await fuInit();
@@ -2104,6 +2105,23 @@ async function holidayInit() {
   }
   _holidays = all;
   holidayCheckUpcoming();
+}
+
+function holidayCheckClosedAnnouncements() {
+  const acked = JSON.parse(localStorage.getItem(HOLIDAY_ACK_KEY) || '{}');
+  const today = new Date(); today.setHours(0,0,0,0);
+  Object.entries(acked).forEach(([iso, status]) => {
+    if (status !== 'closed') return;
+    const eventDate = new Date(iso + 'T12:00:00'); eventDate.setHours(0,0,0,0);
+    if (eventDate < today) return;
+    const name  = _holidays[iso] || 'Public Holiday';
+    const label = eventDate.toLocaleDateString('en-US', { weekday:'long', day:'numeric', month:'long' });
+    const days  = Math.round((eventDate - today) / 86400000);
+    const title = days === 0
+      ? `Practice closed today — ${name}`
+      : `Practice closed ${label} — ${name}`;
+    annAdd({ id: iso, type: 'holiday', title, body: `The practice will be closed for ${name}. Normal hours resume the following business day.`, date: iso });
+  });
 }
 
 function holidayCheckUpcoming() {
