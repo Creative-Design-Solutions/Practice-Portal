@@ -2722,8 +2722,19 @@ function celTodayStr() {
   return new Date().toISOString().split('T')[0];
 }
 
-function celInit() {
+async function celInit() {
   const today = celTodayStr();
+
+  if (_supa) {
+    const [mRes, sRes, wRes] = await Promise.all([
+      _supa.from('portal_settings').select('value').eq('key', CEL_MUSIC_KEY).single(),
+      _supa.from('portal_settings').select('value').eq('key', CEL_SHARE_KEY).single(),
+      _supa.from('portal_settings').select('value').eq('key', CEL_WALL_KEY).single(),
+    ]);
+    if (mRes.data?.value) localStorage.setItem(CEL_MUSIC_KEY, mRes.data.value);
+    if (sRes.data?.value) localStorage.setItem(CEL_SHARE_KEY, sRes.data.value);
+    if (wRes.data?.value) localStorage.setItem(CEL_WALL_KEY, wRes.data.value);
+  }
 
   // Music — daily reset
   const music = JSON.parse(localStorage.getItem(CEL_MUSIC_KEY) || 'null');
@@ -2745,7 +2756,7 @@ function celInit() {
   celRenderWall();
 }
 
-function celSetMusic() {
+async function celSetMusic() {
   const raw = (document.getElementById('cel-music-url').value || '').trim();
   let url = '';
   if (raw.includes('open.spotify.com')) {
@@ -2754,7 +2765,9 @@ function celSetMusic() {
     url = raw.replace('https://music.apple.com/', 'https://embed.music.apple.com/');
   }
   if (!url) return;
-  localStorage.setItem(CEL_MUSIC_KEY, JSON.stringify({ url, date: celTodayStr() }));
+  const mj = JSON.stringify({ url, date: celTodayStr() });
+  localStorage.setItem(CEL_MUSIC_KEY, mj);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: CEL_MUSIC_KEY, value: mj }, { onConflict: 'key' });
   celRenderMusic(url);
   document.getElementById('cel-music-url').value = '';
 }
@@ -2766,11 +2779,13 @@ function celRenderMusic(url) {
   el.innerHTML = `<iframe allow="autoplay *; encrypted-media *; fullscreen *; clipboard-write" frameborder="0" height="${isApple ? 175 : 152}" style="width:100%;border-radius:10px;overflow:hidden;display:block;" ${isApple ? 'sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"' : ''} src="${url}"></iframe>`;
 }
 
-function celPostShare() {
+async function celPostShare() {
   const text = (document.getElementById('cel-share-text').value || '').trim();
   if (!text) return;
   const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  localStorage.setItem(CEL_SHARE_KEY, JSON.stringify({ text, date: celTodayStr(), time }));
+  const sj = JSON.stringify({ text, date: celTodayStr(), time });
+  localStorage.setItem(CEL_SHARE_KEY, sj);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: CEL_SHARE_KEY, value: sj }, { onConflict: 'key' });
   document.getElementById('cel-share-text').value = '';
   celRenderShare(text, time);
 }
@@ -2781,7 +2796,7 @@ function celRenderShare(text, time) {
   el.innerHTML = `<div style="background:linear-gradient(135deg,rgba(139,92,246,0.07),rgba(109,40,217,0.04));border:1px solid rgba(139,92,246,0.15);border-radius:10px;padding:0.9rem 1.1rem;margin-top:0.5rem;"><p style="font-size:0.87rem;color:#3730a3;line-height:1.75;font-style:italic;">"${text}"</p><p style="font-size:0.68rem;color:#8b5cf6;margin-top:0.4rem;opacity:0.8;">Today · ${time || ''}</p></div>`;
 }
 
-function celPostLight() {
+async function celPostLight() {
   const text = (document.getElementById('cel-light-text').value || '').trim();
   if (!text) return;
   const wall = JSON.parse(localStorage.getItem(CEL_WALL_KEY) || '[]');
@@ -2792,20 +2807,25 @@ function celPostLight() {
   };
   wall.unshift(entry);
   if (wall.length > CEL_WALL_MAX) wall.length = CEL_WALL_MAX;
-  localStorage.setItem(CEL_WALL_KEY, JSON.stringify(wall));
+  const wj = JSON.stringify(wall);
+  localStorage.setItem(CEL_WALL_KEY, wj);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: CEL_WALL_KEY, value: wj }, { onConflict: 'key' });
   document.getElementById('cel-light-text').value = '';
   celRenderWall();
 }
 
-function celRemoveEntry(id) {
+async function celRemoveEntry(id) {
   const wall = JSON.parse(localStorage.getItem(CEL_WALL_KEY) || '[]').filter(e => e.id !== id);
-  localStorage.setItem(CEL_WALL_KEY, JSON.stringify(wall));
+  const wj = JSON.stringify(wall);
+  localStorage.setItem(CEL_WALL_KEY, wj);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: CEL_WALL_KEY, value: wj }, { onConflict: 'key' });
   celRenderWall();
 }
 
-function celClearWall() {
+async function celClearWall() {
   if (!confirm('Clear the entire wall? This cannot be undone.')) return;
   localStorage.removeItem(CEL_WALL_KEY);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: CEL_WALL_KEY, value: '[]' }, { onConflict: 'key' });
   celRenderWall();
 }
 
