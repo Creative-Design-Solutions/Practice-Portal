@@ -3109,8 +3109,18 @@ let _bdays = [];
 
 const MONTH_NAMES = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
 
-function bdayInit() {
-  _bdays = JSON.parse(localStorage.getItem(BDAYS_KEY) || '[]');
+async function bdayInit() {
+  if (_supa) {
+    const { data } = await _supa.from('portal_settings').select('value').eq('key', BDAYS_KEY).single();
+    if (data?.value) {
+      _bdays = JSON.parse(data.value);
+      localStorage.setItem(BDAYS_KEY, data.value);
+    } else {
+      _bdays = JSON.parse(localStorage.getItem(BDAYS_KEY) || '[]');
+    }
+  } else {
+    _bdays = JSON.parse(localStorage.getItem(BDAYS_KEY) || '[]');
+  }
   bdayRender();
   bdayCheckCountdowns();
 }
@@ -3168,23 +3178,27 @@ function closeBdayModal() {
   document.getElementById('bday-modal').classList.remove('open');
 }
 
-function bdaySave() {
+async function bdaySave() {
   const name  = document.getElementById('bday-name').value.trim();
   const month = parseInt(document.getElementById('bday-month').value, 10);
   const day   = parseInt(document.getElementById('bday-day').value, 10);
   if (!name || !day || day < 1 || day > 31) return;
   _bdays.push({ id: Date.now().toString(), name, month, day });
-  localStorage.setItem(BDAYS_KEY, JSON.stringify(_bdays));
+  const j = JSON.stringify(_bdays);
+  localStorage.setItem(BDAYS_KEY, j);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: BDAYS_KEY, value: j }, { onConflict: 'key' });
   closeBdayModal();
   bdayRender();
   bdayCheckCountdowns();
   annRender();
 }
 
-function bdayDelete(id) {
+async function bdayDelete(id) {
   _bdays = _bdays.filter(b => b.id !== id);
   _ann   = _ann.filter(a => a.id !== `bday-${id}`);
-  localStorage.setItem(BDAYS_KEY, JSON.stringify(_bdays));
+  const j = JSON.stringify(_bdays);
+  localStorage.setItem(BDAYS_KEY, j);
+  if (_supa) await _supa.from('portal_settings').upsert({ key: BDAYS_KEY, value: j }, { onConflict: 'key' });
   annPersist();
   bdayRender();
   annRender();
