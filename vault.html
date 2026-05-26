@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Credential Vault — Practice Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal:        #2d9e96;
+      --teal-dark:   #1f7971;
+      --teal-mid:    #3ab5ac;
+      --teal-light:  #e8f5f4;
+      --teal-faint:  #f2fafa;
+      --navy:        #0c1c2c;
+      --text:        #0f1e2d;
+      --text-2:      #486070;
+      --text-3:      #8da0ac;
+      --text-4:      #b8cad2;
+      --bg:          #f5f9f9;
+      --surface:     #ffffff;
+      --border:      rgba(0,0,0,0.065);
+      --border-soft: rgba(0,0,0,0.038);
+      --shadow-xs:   0 1px 2px rgba(0,0,0,0.05);
+      --shadow-sm:   0 1px 4px rgba(0,0,0,0.06), 0 2px 8px rgba(0,0,0,0.04);
+      --shadow:      0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+      --shadow-lg:   0 12px 40px rgba(0,0,0,0.09), 0 2px 8px rgba(0,0,0,0.05);
+      --radius:      14px;
+      --radius-lg:   22px;
+      --radius-sm:   8px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+    /* ── LOCK SCREEN ── */
+    #vault-lock {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 2rem;
+      background:
+        radial-gradient(ellipse 100% 70% at 15% 5%, rgba(45,158,150,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 90% at 85% 95%, rgba(45,158,150,0.04) 0%, transparent 55%),
+        linear-gradient(160deg, #fafcfc 0%, #f3f8f8 100%);
+    }
+    .lock-card {
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.95);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg), 0 0 0 1px rgba(45,158,150,0.05);
+      padding: 3.5rem 3rem 3rem;
+      width: 100%; max-width: 380px;
+      text-align: center;
+    }
+    .ornament { display: flex; align-items: center; justify-content: center; gap: 0.7rem; margin-bottom: 2rem; }
+    .ornament-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(45,158,150,0.2)); }
+    .ornament-line.r { background: linear-gradient(270deg, transparent, rgba(45,158,150,0.2)); }
+    .ornament-diamond { width: 5px; height: 5px; background: var(--teal); transform: rotate(45deg); opacity: 0.5; }
+    .lock-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      border: 1.5px solid rgba(45,158,150,0.3);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.6rem;
+      background: rgba(45,158,150,0.03);
+      font-size: 1.5rem;
+    }
+    .lock-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.55rem; font-weight: 500; color: var(--text);
+      letter-spacing: -0.02em; margin-bottom: 0.4rem; line-height: 1.25;
+    }
+    .lock-sub { font-size: 0.8rem; color: var(--text-3); margin-bottom: 2rem; letter-spacing: 0.01em; }
+    .lock-field {
+      width: 100%; background: #f7fafa;
+      border: 1px solid rgba(45,158,150,0.15); border-radius: var(--radius-sm);
+      padding: 0.85rem 1.1rem; font-family: 'Inter', sans-serif;
+      font-size: 0.88rem; color: var(--text); outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      margin-bottom: 1rem; letter-spacing: 0.1em; text-align: center;
+    }
+    .lock-field:focus { border-color: rgba(45,158,150,0.4); box-shadow: 0 0 0 3px rgba(45,158,150,0.08); background: white; }
+    .lock-field::placeholder { color: var(--text-4); letter-spacing: 0.03em; }
+    .lock-btn {
+      width: 100%; background: transparent; color: var(--teal-dark);
+      border: 1.5px solid rgba(45,158,150,0.35); border-radius: var(--radius-sm);
+      padding: 0.85rem 1.25rem; font-family: 'Inter', sans-serif;
+      font-size: 0.83rem; font-weight: 500; letter-spacing: 0.08em;
+      text-transform: uppercase; cursor: pointer;
+      transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.15s;
+    }
+    .lock-btn:hover { background: var(--teal); border-color: var(--teal); color: white; box-shadow: 0 4px 16px rgba(45,158,150,0.22); }
+    .lock-error { font-size: 0.78rem; color: #c0392b; margin-top: 0.85rem; min-height: 1.2em; font-style: italic; }
+    .lock-hint { font-size: 0.7rem; color: var(--text-4); margin-top: 0.75rem; letter-spacing: 0.02em; }
+
+    /* ── VAULT OPEN ── */
+    #vault-open { display: none; min-height: 100vh; flex-direction: column; }
+
+    /* Top bar — matches portal */
+    .vault-topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.94); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+    .vault-topbar::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(45,158,150,0.2) 20%, rgba(45,158,150,0.2) 80%, transparent 100%);
+    }
+    .vault-topbar-inner {
+      max-width: 860px; margin: 0 auto; padding: 0 1.5rem;
+      height: 62px; display: flex; align-items: center; gap: 1rem;
+    }
+    .vault-brand { display: flex; align-items: center; gap: 0.75rem; flex: 1; }
+    .vault-mark {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1.5px solid rgba(45,158,150,0.3); background: rgba(45,158,150,0.04);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .vault-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 500; color: var(--text); letter-spacing: -0.01em; }
+    .vault-name span { font-size: 0.7rem; color: var(--text-3); font-weight: 400; font-family: 'Inter', sans-serif; letter-spacing: 0.04em; display: block; }
+    .vault-lock-btn {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-family: 'Inter', sans-serif; font-size: 0.72rem; font-weight: 500;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--text-3); background: none;
+      border: 1px solid var(--border); border-radius: 99px;
+      padding: 0.35rem 0.85rem; cursor: pointer;
+      transition: all 0.15s;
+    }
+    .vault-lock-btn:hover { border-color: rgba(45,158,150,0.3); color: var(--teal); }
+    .vault-search-wrap { position: relative; }
+    .vault-search {
+      padding: 0.45rem 0.9rem 0.45rem 2rem;
+      border: 1px solid var(--border); border-radius: 99px;
+      font-family: 'Inter', sans-serif; font-size: 0.8rem;
+      background: var(--bg); color: var(--text); outline: none;
+      width: 200px; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .vault-search:focus { border-color: rgba(45,158,150,0.3); box-shadow: 0 0 0 3px rgba(45,158,150,0.07); }
+    .vault-search-icon {
+      position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%);
+      color: var(--text-4); pointer-events: none;
+    }
+
+    /* Main content */
+    .vault-main { flex: 1; max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; width: 100%; }
+
+    .vault-section-label {
+      font-size: 0.62rem; font-weight: 600; letter-spacing: 0.16em;
+      text-transform: uppercase; color: var(--text-3);
+      margin-bottom: 0.65rem; margin-top: 2rem;
+    }
+    .vault-section-label:first-child { margin-top: 0; }
+
+    .vault-entries { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 0.5rem; }
+
+    .vault-entry {
+      display: flex; align-items: center; gap: 0.9rem;
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--radius-sm); padding: 0.85rem 1rem;
+      transition: box-shadow 0.15s, border-color 0.15s;
+    }
+    .vault-entry:hover { box-shadow: var(--shadow-sm); border-color: rgba(45,158,150,0.12); }
+    .entry-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; flex-shrink: 0; background: var(--teal-faint);
+    }
+    .entry-body { flex: 1; min-width: 0; }
+    .entry-name { font-size: 0.88rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-user { font-size: 0.72rem; color: var(--text-3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-pass-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 3px; }
+    .entry-pass {
+      font-family: 'Inter', monospace; font-size: 0.75rem;
+      color: var(--text-4); letter-spacing: 0.08em;
+      cursor: pointer; user-select: none; transition: color 0.15s;
+    }
+    .entry-pass.shown { color: var(--text-2); letter-spacing: 0.04em; }
+    .entry-reveal {
+      font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em;
+      color: var(--text-4); background: none; border: none;
+      cursor: pointer; padding: 0; text-transform: uppercase;
+      transition: color 0.15s; line-height: 1;
+    }
+    .entry-reveal:hover { color: var(--teal); }
+    .entry-actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
+    .entry-btn {
+      font-family: 'Inter', sans-serif; font-size: 0.65rem; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 0.3rem 0.7rem; border-radius: 99px;
+      border: 1px solid var(--border); background: none;
+      color: var(--text-3); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .entry-btn:hover { border-color: rgba(45,158,150,0.3); color: var(--teal); }
+    .entry-btn.copied { background: var(--teal-light); color: var(--teal-dark); border-color: rgba(45,158,150,0.2); }
+
+    .vault-empty { text-align: center; padding: 3rem; font-size: 0.85rem; color: var(--text-3); font-style: italic; }
+
+    .vault-disclaimer {
+      margin-top: 3rem; padding: 1rem 1.25rem;
+      background: var(--teal-faint); border: 1px solid rgba(45,158,150,0.12);
+      border-radius: var(--radius-sm); font-size: 0.75rem; color: var(--text-3);
+      line-height: 1.6; text-align: center;
+    }
+
+    /* no-search state */
+    .hidden-entry { display: none; }
+
+    @media(max-width: 600px) {
+      .vault-search { width: 140px; }
+      .entry-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="vault-lock">
+  <div class="lock-card">
+    <div class="ornament">
+      <div class="ornament-line"></div>
+      <div class="ornament-diamond"></div>
+      <div class="ornament-line r"></div>
+    </div>
+    <div class="lock-icon">🔒</div>
+    <div class="lock-title">Credential Vault</div>
+    <div class="lock-sub">Enter your master password to access stored credentials.</div>
+    <input class="lock-field" id="lock-pw" type="password" placeholder="••••••••••••" autocomplete="off" />
+    <button class="lock-btn" onclick="unlock()">Unlock Vault</button>
+    <div class="lock-error" id="lock-err"></div>
+    <div class="lock-hint">Demo password: vault2025</div>
+  </div>
+</div>
+
+<!-- VAULT OPEN -->
+<div id="vault-open">
+  <div class="vault-topbar">
+    <div class="vault-topbar-inner">
+      <div class="vault-brand">
+        <div class="vault-mark">🔓</div>
+        <div class="vault-name">
+          Credential Vault
+          <span>Practice Portal</span>
+        </div>
+      </div>
+      <div class="vault-search-wrap">
+        <svg class="vault-search-icon" width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.5"/><path d="M10.5 10.5l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input class="vault-search" id="vault-search" type="text" placeholder="Search credentials…" oninput="filterVault(this.value)" />
+      </div>
+      <button class="vault-lock-btn" onclick="lock()">
+        <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7V5a3 3 0 1 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Lock
+      </button>
+    </div>
+  </div>
+
+  <div class="vault-main" id="vault-main">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<script>
+const MASTER = 'vault2025';
+
+const VAULT = [
+  {
+    category: 'Practice Software',
+    entries: [
+      { icon: '🏥', name: 'Gentu', user: 'practice@example.com', pass: 'Gntu#2025!Pr4c' },
+      { icon: '📋', name: 'Ezidebit', user: 'billing@example.com', pass: 'Ezd!B1ll#84xZ' },
+      { icon: '📊', name: 'Xero', user: 'accounts@example.com', pass: 'Xr0$Acc7!Wd22' },
+    ]
+  },
+  {
+    category: 'Administration',
+    entries: [
+      { icon: '📧', name: 'Practice Email', user: 'admin@practice.com.au', pass: 'Em@il!Pr4ct1ce9' },
+      { icon: '💻', name: 'Website Admin', user: 'admin.practice.com.au', pass: 'W3b$!t3#Admin5' },
+      { icon: '🏦', name: 'Business Banking', user: 'Business Cheque — BSB 062-000', pass: 'B@nk!AccSec#77' },
+    ]
+  },
+  {
+    category: 'Comms & Scheduling',
+    entries: [
+      { icon: '📱', name: 'Lyrebird Health', user: 'dictation@practice.com.au', pass: 'Lyr3b1rd#Hlt22' },
+      { icon: '📅', name: 'HotDoc', user: 'bookings@practice.com.au', pass: 'H0tD0c!Bk#55xP' },
+    ]
+  },
+  {
+    category: 'Cloud & Integrations',
+    entries: [
+      { icon: '🗄️', name: 'Supabase', user: 'Project ref: abcdefghij', pass: 'sbp_xXXXXXXXXXXXXXXXX' },
+      { icon: '🔑', name: 'Microsoft 365', user: 'admin@practice.onmicrosoft.com', pass: 'Ms!365#Admin9Zq' },
+    ]
+  },
+];
+
+function unlock() {
+  const pw = document.getElementById('lock-pw').value.trim();
+  const err = document.getElementById('lock-err');
+  if (pw === MASTER) {
+    document.getElementById('vault-lock').style.display = 'none';
+    const open = document.getElementById('vault-open');
+    open.style.display = 'flex';
+    buildVault('');
+  } else {
+    err.textContent = 'Incorrect password. Please try again.';
+    document.getElementById('lock-pw').style.borderColor = 'rgba(192,57,43,0.4)';
+    document.getElementById('lock-pw').style.boxShadow = '0 0 0 3px rgba(192,57,43,0.08)';
+  }
+}
+
+document.getElementById('lock-pw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') unlock();
+  document.getElementById('lock-err').textContent = '';
+  document.getElementById('lock-pw').style.borderColor = '';
+  document.getElementById('lock-pw').style.boxShadow = '';
+});
+
+function lock() {
+  document.getElementById('vault-open').style.display = 'none';
+  document.getElementById('vault-lock').style.display = 'flex';
+  document.getElementById('lock-pw').value = '';
+  document.getElementById('lock-err').textContent = '';
+  document.getElementById('vault-search').value = '';
+}
+
+function buildVault(filter) {
+  const main = document.getElementById('vault-main');
+  const q = filter.toLowerCase();
+  main.innerHTML = '';
+
+  let anyVisible = false;
+
+  VAULT.forEach(section => {
+    const matching = section.entries.filter(e =>
+      !q || e.name.toLowerCase().includes(q) || e.user.toLowerCase().includes(q)
+    );
+    if (!matching.length) return;
+    anyVisible = true;
+
+    const label = document.createElement('div');
+    label.className = 'vault-section-label';
+    label.textContent = section.category;
+    main.appendChild(label);
+
+    const list = document.createElement('div');
+    list.className = 'vault-entries';
+
+    matching.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'vault-entry';
+      row.innerHTML = `
+        <div class="entry-icon">${entry.icon}</div>
+        <div class="entry-body">
+          <div class="entry-name">${entry.name}</div>
+          <div class="entry-user">${entry.user}</div>
+          <div class="entry-pass-row">
+            <span class="entry-pass" data-pass="${entry.pass}" title="Click to reveal">••••••••••••</span>
+            <button class="entry-reveal">show</button>
+          </div>
+        </div>
+        <div class="entry-actions">
+          <button class="entry-btn copy-btn">Copy</button>
+        </div>`;
+
+      const passEl  = row.querySelector('.entry-pass');
+      const revBtn  = row.querySelector('.entry-reveal');
+      const copyBtn = row.querySelector('.copy-btn');
+
+      revBtn.addEventListener('click', () => {
+        const shown = passEl.classList.toggle('shown');
+        passEl.textContent = shown ? entry.pass : '••••••••••••';
+        revBtn.textContent  = shown ? 'hide' : 'show';
+      });
+
+      copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(entry.pass).then(() => {
+          copyBtn.textContent = 'Copied!';
+          copyBtn.classList.add('copied');
+          setTimeout(() => { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 1800);
+        });
+      });
+
+      list.appendChild(row);
+    });
+
+    main.appendChild(list);
+  });
+
+  if (!anyVisible) {
+    main.innerHTML = '<div class="vault-empty">No credentials match your search.</div>';
+  }
+
+  // Disclaimer
+  const disc = document.createElement('div');
+  disc.className = 'vault-disclaimer';
+  disc.textContent = 'Demo credentials only — nothing stored here is real. In your actual vault, entries are specific to your practice and protected by your master password.';
+  main.appendChild(disc);
+}
+
+function filterVault(v) { buildVault(v); }
+</script>
+</body>
+</html>
