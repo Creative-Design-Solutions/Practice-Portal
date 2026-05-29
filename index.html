@@ -742,11 +742,11 @@
       .top-bar-inner { height: auto; flex-wrap: wrap; padding: 0.55rem 1rem 0; gap: 0; align-items: center; }
       .bar-brand { order: 1; flex: 1; padding-bottom: 0.45rem; }
       .bar-right { order: 2; gap: 0.5rem; }
-      .tab-nav { order: 3; flex: 0 0 calc(100% + 2rem); margin: 0 -1rem; flex-wrap: wrap; padding: 0; border-top: 1px solid var(--border-soft); overflow: visible; }
-      .tab-btn { flex: 0 0 25%; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0.52rem 0.2rem; font-size: 0.58rem; letter-spacing: 0; border-radius: 0; white-space: normal; text-align: center; line-height: 1.2; }
+      .tab-nav { order: 3; flex: 0 0 calc(100% + 2rem); margin: 0 -1rem; flex-wrap: wrap; padding: 0; border-top: 1px solid var(--border-soft); overflow: visible; gap: 1px; background: var(--border); }
+      .tab-btn { flex: 0 0 calc(25% - 1px); flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0.52rem 0.2rem; font-size: 0.58rem; letter-spacing: 0; border-radius: 0; white-space: normal; text-align: center; line-height: 1.2; background: var(--surface); }
       .tab-btn svg { width: 16px; height: 16px; }
       .tab-btn::after { display: none; }
-      .tab-btn.active { background: rgba(45,158,150,0.09); color: var(--teal-dark); }
+      .tab-btn.active { background: var(--teal-faint); color: var(--teal-dark); }
       .tab-badge { font-size: 0.52rem; padding: 1px 4px; }
 
       /* Calendar tip */
@@ -767,7 +767,7 @@
     @media (orientation: landscape) and (max-height: 500px) {
       .top-bar-inner { height: 56px; flex-wrap: nowrap; padding: 0 1.25rem; gap: 1rem; align-items: center; }
       .bar-brand { flex: 0 0 auto; }
-      .tab-nav { flex: 1; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0; border-top: none; padding-left: 0.25rem; }
+      .tab-nav { flex: 1; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0; border-top: none; padding-left: 0.25rem; gap: 0; background: transparent; }
       .tab-nav::-webkit-scrollbar { display: none; }
       .tab-btn { flex: none; flex-direction: row; align-items: center; font-size: 0.75rem; padding: 0.45rem 0.65rem; border-radius: 8px; white-space: nowrap; gap: 0.35rem; text-align: left; line-height: 1; }
       .tab-btn svg { width: 13px; height: 13px; }
@@ -1283,6 +1283,47 @@
             <p style="font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--teal);margin-bottom:0.75rem;">Policies</p>
             <div id="docs-policies" class="res-link-list"><p style="color:var(--text-3);font-size:0.84rem;font-style:italic;">No policies added yet.</p></div>
           </div>
+        </div>
+      </div>
+
+      <!-- PRACTICE FORMS -->
+      <div style="margin-bottom:2rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.75rem;">
+          <p class="card-title" style="margin:0;">Practice Forms</p>
+          <span style="font-size:0.7rem;color:var(--text-3);font-style:italic;">Typeable in browser · Save as PDF · Email back</span>
+        </div>
+        <div class="hub-grid">
+
+          <!-- Medicare Assignment of Benefit -->
+          <div class="card" style="padding:1.25rem;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.6rem;">
+              <p style="font-size:0.88rem;font-weight:600;color:var(--text);line-height:1.3;margin:0;">Medicare Assignment<br>of Benefit</p>
+              <span style="flex-shrink:0;font-size:0.58rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;background:rgba(45,158,150,0.1);color:var(--teal-dark);border:1px solid rgba(45,158,150,0.2);border-radius:20px;padding:0.18rem 0.55rem;margin-top:0.1rem;">From 1 Jul 2026</span>
+            </div>
+            <p style="font-size:0.76rem;color:var(--text-3);line-height:1.55;margin-bottom:1rem;">Staff fills service details and generates a personalised patient link. Patient signs online, saves PDF, emails back.</p>
+            <a href="https://wisdomsurgery.me/forms/medicare-assignment.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;">Open Form →</a>
+          </div>
+
+          <!-- Patient Medical History -->
+          <div class="card" style="padding:1.25rem;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.6rem;">
+              <p style="font-size:0.88rem;font-weight:600;color:var(--text);line-height:1.3;margin:0;">Patient Medical<br>History</p>
+              <span style="flex-shrink:0;font-size:0.58rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;background:rgba(45,158,150,0.1);color:var(--teal-dark);border:1px solid rgba(45,158,150,0.2);border-radius:20px;padding:0.18rem 0.55rem;margin-top:0.1rem;">Pre-consult</span>
+            </div>
+            <p style="font-size:0.76rem;color:var(--text-3);line-height:1.55;margin-bottom:1rem;">Comprehensive history including current medications, allergies, and relevant past procedures. Patient completes before the appointment.</p>
+            <a href="https://wisdomsurgery.me/forms/medical-history.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;">Open Form →</a>
+          </div>
+
+          <!-- Financial Consent -->
+          <div class="card" style="padding:1.25rem;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.6rem;">
+              <p style="font-size:0.88rem;font-weight:600;color:var(--text);line-height:1.3;margin:0;">Financial<br>Consent</p>
+              <span style="flex-shrink:0;font-size:0.58rem;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;background:rgba(45,158,150,0.1);color:var(--teal-dark);border:1px solid rgba(45,158,150,0.2);border-radius:20px;padding:0.18rem 0.55rem;margin-top:0.1rem;">Admin</span>
+            </div>
+            <p style="font-size:0.76rem;color:var(--text-3);line-height:1.55;margin-bottom:1rem;">Fee estimate acknowledgement, payment terms, and billing authority. Covers gap payments and private health insurance.</p>
+            <a href="https://wisdomsurgery.me/forms/financial-details.html" target="_blank" class="btn btn-ghost btn-sm" style="text-decoration:none;">Open Form →</a>
+          </div>
+
         </div>
       </div>
 
