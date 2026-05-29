@@ -4,6 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Practice Portal</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2d9e96">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Portal">
+  <link rel="apple-touch-icon" href="icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -665,6 +673,109 @@
     .ref-wrap { background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow:hidden; }
     /* ── RESPONDED ── */
     .rsp-badge { font-size:0.67rem;font-weight:600;color:var(--teal-dark);background:rgba(45,158,150,0.10);padding:0.15rem 0.5rem;border-radius:12px; }
+
+    /* ── LANDSCAPE TIP (hidden on desktop, shown on mobile) ── */
+    .cal-landscape-tip {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 1rem;
+      background: rgba(45,158,150,0.06);
+      border: 1px solid rgba(45,158,150,0.18);
+      border-radius: var(--radius-sm);
+      margin-bottom: 1.25rem;
+      font-size: 0.78rem;
+      color: var(--text-3);
+      font-style: italic;
+      line-height: 1.4;
+    }
+    .cal-landscape-tip svg { flex-shrink: 0; opacity: 0.55; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 680px) {
+
+      /* Top bar — brand row + tab row */
+      .top-bar-inner {
+        height: auto;
+        flex-wrap: wrap;
+        padding: 0.55rem 1rem 0;
+        gap: 0;
+        align-items: center;
+      }
+      .bar-brand { flex: 1; padding-bottom: 0.45rem; }
+      .bar-right { gap: 0.5rem; }
+      .bar-surgeon, .bar-date { display: none; }
+
+      /* Tab nav — full width, wraps to 2 rows of 4 */
+      .tab-nav {
+        flex: 0 0 calc(100% + 2rem);
+        margin: 0 -1rem;
+        flex-wrap: wrap;
+        padding: 0;
+        border-top: 1px solid var(--border-soft);
+        overflow: visible;
+      }
+      .tab-btn {
+        flex: 0 0 25%;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 0.52rem 0.2rem;
+        font-size: 0.58rem;
+        letter-spacing: 0;
+        border-radius: 0;
+        white-space: normal;
+        text-align: center;
+        line-height: 1.2;
+      }
+      .tab-btn svg { width: 16px; height: 16px; }
+      .tab-btn::after { display: none; }
+      .tab-btn.active {
+        background: rgba(45,158,150,0.09);
+        color: var(--teal-dark);
+      }
+      .tab-badge { font-size: 0.52rem; padding: 1px 4px; }
+
+      /* Portal main */
+      .portal-main { padding: 1rem 0.9rem 5rem; }
+
+      /* Page headers */
+      .page-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+
+      /* Grids → single column */
+      .hub-grid, .notes-grid, .settings-grid { grid-template-columns: 1fr; }
+
+      /* Calendar — scrollable in portrait */
+      .cal-landscape-tip { display: flex; }
+      .cal-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -0.9rem;
+        padding: 0 0.9rem;
+      }
+      .year-strip {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+        padding-bottom: 0.25rem;
+      }
+      .week-strip {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.25rem;
+      }
+
+      /* Tables — horizontal scroll */
+      .ref-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .ref-tbl { min-width: 480px; }
+
+      /* Planner row buttons — stack on mobile */
+      .planner-row { flex-direction: column; }
+
+      /* Login card */
+      .login-card { padding: 2.5rem 1.5rem; }
+    }
   </style>
 </head>
 <body>
@@ -957,6 +1068,17 @@
           <p style="font-size:0.75rem;font-weight:600;color:var(--text);margin-bottom:0.25rem;">Recognize Holidays</p>
           <p style="font-size:0.7rem;color:var(--text-3);line-height:1.5;">Holidays auto-populate. A hub notice lets you confirm open or closed — shows in announcements.</p>
         </div>
+      </div>
+
+      <!-- Mobile landscape tip — hidden on desktop -->
+      <div class="cal-landscape-tip">
+        <svg width="22" height="16" viewBox="0 0 22 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="1" y="1" width="20" height="14" rx="2.5" stroke="#2d9e96" stroke-width="1.4"/>
+          <circle cx="18.5" cy="8" r="1" fill="#2d9e96"/>
+          <path d="M8 5l-3 3 3 3" stroke="#2d9e96" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 5l3 3-3 3" stroke="#2d9e96" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Rotate to landscape for the full calendar. Flip back to portrait to edit a day.
       </div>
 
       <div class="year-strip" id="year-strip"></div>
