@@ -301,7 +301,14 @@
     .apps-dropdown-label { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-4); padding: 0.45rem 0.9rem 0.2rem; }
     .apps-link { display: block; padding: 0.45rem 0.9rem; text-decoration: none; color: var(--text-2); font-size: 0.82rem; transition: background 0.1s, color 0.1s; }
     .apps-link:hover { background: var(--bg); color: var(--teal); }
+    /* Separator between tabs and right controls */
+    .bar-right {
+      border-left: 1px solid var(--border);
+      padding-left: 1rem;
+      margin-left: 0.5rem;
+    }
     .bar-logout {
+      display: inline-flex; align-items: center; gap: 0.35rem;
       font-size: 0.72rem; color: var(--text-3);
       background: none; border: 1px solid var(--border);
       border-radius: var(--radius-sm); padding: 0.3rem 0.75rem;
@@ -309,6 +316,13 @@
       transition: all 0.15s; letter-spacing: 0.01em;
     }
     .bar-logout:hover { color: var(--text); border-color: rgba(0,0,0,0.14); background: var(--bg); }
+    .bar-logout-icon { flex-shrink: 0; }
+    .bar-logout-text { }
+    @media (max-width: 680px) {
+      .bar-right { border-left: none; padding-left: 0; margin-left: 0; gap: 0.6rem; }
+      .bar-logout { padding: 0.3rem 0.45rem; border-radius: 8px; }
+      .bar-logout-text { display: none; }
+    }
 
     .inbox-icon-wrap {
       position: relative; display: flex; align-items: center; justify-content: center;
@@ -599,8 +613,27 @@
     .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; font-size: 0.8rem; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; letter-spacing: 0.01em; }
     .btn-primary { background: var(--teal); color: white; box-shadow: 0 2px 10px rgba(45,158,150,0.25); }
     .btn-primary:hover { background: var(--teal-dark); box-shadow: 0 4px 14px rgba(45,158,150,0.35); }
-    .btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
-    .btn-ghost:hover { background: var(--bg); color: var(--text); border-color: rgba(0,0,0,0.12); }
+    .btn-ghost {
+      background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(222,232,240,0.88) 100%);
+      color: var(--text-2);
+      border: 1px solid rgba(168,192,210,0.58);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.95),
+        inset 0 -1px 0 rgba(0,0,0,0.03),
+        0 1px 3px rgba(0,0,0,0.07),
+        0 1px 1px rgba(0,0,0,0.04);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.85);
+    }
+    .btn-ghost:hover {
+      background: linear-gradient(180deg, #ffffff 0%, rgba(232,244,250,0.95) 100%);
+      border-color: rgba(140,175,200,0.72);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,1),
+        inset 0 -1px 0 rgba(0,0,0,0.04),
+        0 2px 8px rgba(0,0,0,0.09),
+        0 1px 2px rgba(0,0,0,0.05);
+      color: var(--text);
+    }
     .btn-danger { background: transparent; color: #c0392b; border: 1px solid rgba(192,57,43,0.2); }
     .btn-danger:hover { background: rgba(192,57,43,0.04); }
     .btn-sm { padding: 0.38rem 0.75rem; font-size: 0.74rem; }
@@ -691,90 +724,61 @@
     }
     .cal-landscape-tip svg { flex-shrink: 0; opacity: 0.55; }
 
-    /* ── MOBILE ── */
+    /* ── MOBILE — all screen sizes (portrait + landscape) ── */
     @media (max-width: 680px) {
-
-      /* Top bar — brand row + tab row */
-      .top-bar-inner {
-        height: auto;
-        flex-wrap: wrap;
-        padding: 0.55rem 1rem 0;
-        gap: 0;
-        align-items: center;
-      }
-      .bar-brand { flex: 1; padding-bottom: 0.45rem; }
-      .bar-right { gap: 0.5rem; }
       .bar-surgeon, .bar-date { display: none; }
-
-      /* Tab nav — full width, wraps to 2 rows of 4 */
-      .tab-nav {
-        flex: 0 0 calc(100% + 2rem);
-        margin: 0 -1rem;
-        flex-wrap: wrap;
-        padding: 0;
-        border-top: 1px solid var(--border-soft);
-        overflow: visible;
-      }
-      .tab-btn {
-        flex: 0 0 25%;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 3px;
-        padding: 0.52rem 0.2rem;
-        font-size: 0.58rem;
-        letter-spacing: 0;
-        border-radius: 0;
-        white-space: normal;
-        text-align: center;
-        line-height: 1.2;
-      }
-      .tab-btn svg { width: 16px; height: 16px; }
-      .tab-btn::after { display: none; }
-      .tab-btn.active {
-        background: rgba(45,158,150,0.09);
-        color: var(--teal-dark);
-      }
-      .tab-badge { font-size: 0.52rem; padding: 1px 4px; }
-
-      /* Portal main */
       .portal-main { padding: 1rem 0.9rem 5rem; }
-
-      /* Page headers */
       .page-header { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-
-      /* Grids → single column */
       .hub-grid, .notes-grid, .settings-grid { grid-template-columns: 1fr; }
-
-      /* Calendar — scrollable in portrait */
-      .cal-landscape-tip { display: flex; }
-      .cal-wrap {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 -0.9rem;
-        padding: 0 0.9rem;
-      }
-      .year-strip {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        white-space: nowrap;
-        padding-bottom: 0.25rem;
-      }
-      .week-strip {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 0.25rem;
-      }
-
-      /* Tables — horizontal scroll */
+      .cal-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -0.9rem; padding: 0 0.9rem; }
+      .year-strip { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; padding-bottom: 0.25rem; }
       .ref-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .ref-tbl { min-width: 480px; }
-
-      /* Planner row buttons — stack on mobile */
-      .planner-row { flex-direction: column; }
-
-      /* Login card */
       .login-card { padding: 2.5rem 1.5rem; }
+    }
+
+    /* ── MOBILE PORTRAIT — two-row tab nav ── */
+    @media (max-width: 680px) and (orientation: portrait) {
+      .top-bar-inner { height: auto; flex-wrap: wrap; padding: 0.55rem 1rem 0; gap: 0; align-items: center; }
+      .bar-brand { flex: 1; padding-bottom: 0.45rem; }
+      .bar-right { gap: 0.5rem; }
+      .tab-nav { flex: 0 0 calc(100% + 2rem); margin: 0 -1rem; flex-wrap: wrap; padding: 0; border-top: 1px solid var(--border-soft); overflow: visible; }
+      .tab-btn { flex: 0 0 25%; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0.52rem 0.2rem; font-size: 0.58rem; letter-spacing: 0; border-radius: 0; white-space: normal; text-align: center; line-height: 1.2; }
+      .tab-btn svg { width: 16px; height: 16px; }
+      .tab-btn::after { display: none; }
+      .tab-btn.active { background: rgba(45,158,150,0.09); color: var(--teal-dark); }
+      .tab-badge { font-size: 0.52rem; padding: 1px 4px; }
+
+      /* Calendar tip */
+      .cal-landscape-tip { display: flex; }
+
+      /* Weekly pattern — compact boxes */
+      .pattern-card { padding: 1rem 1rem; }
+      .week-strip { gap: 0.3rem; margin-top: 0.65rem; }
+      .week-day { padding: 0.5rem 0.2rem 0.45rem; border-radius: 8px; }
+      .week-day-name { font-size: 0.54rem; margin-bottom: 0.1rem; }
+      .week-day-num { font-size: 0.95rem; margin-bottom: 0.25rem; }
+      .week-day-loc { font-size: 0.5rem; padding: 2px 3px; }
+      .week-slot-label { display: none; }
+      .pp-note-wrap { display: none; }
+    }
+
+    /* ── PHONE LANDSCAPE — desktop feel ── */
+    @media (orientation: landscape) and (max-height: 500px) {
+      .top-bar-inner { height: 56px; flex-wrap: nowrap; padding: 0 1.25rem; gap: 1rem; align-items: center; }
+      .bar-brand { flex: 0 0 auto; }
+      .tab-nav { flex: 1; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0; border-top: none; padding-left: 0.25rem; }
+      .tab-nav::-webkit-scrollbar { display: none; }
+      .tab-btn { flex: none; flex-direction: row; align-items: center; font-size: 0.75rem; padding: 0.45rem 0.65rem; border-radius: 8px; white-space: nowrap; gap: 0.35rem; text-align: left; line-height: 1; }
+      .tab-btn svg { width: 13px; height: 13px; }
+      .tab-btn::after { display: block; }
+      .tab-btn.active { background: transparent; color: var(--teal-dark); }
+      .tab-badge { font-size: 0.62rem; }
+      .portal-main { padding: 1.25rem 1.5rem 2.5rem; }
+      .hub-grid { grid-template-columns: repeat(2, 1fr); }
+      .notes-grid { grid-template-columns: repeat(2, 1fr); }
+      .cal-landscape-tip { display: none; }
+      .page-header { flex-direction: row; align-items: flex-start; }
     }
   </style>
 </head>
@@ -857,7 +861,10 @@
         </div>
         <span class="bar-surgeon" id="bar-surgeon"></span>
         <span class="bar-date" id="bar-date"></span>
-        <button class="bar-logout" onclick="logout()">Sign out</button>
+        <button class="bar-logout" onclick="logout()" title="Sign out">
+          <svg class="bar-logout-icon" width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M10 11l3-3-3-3M13 8H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="bar-logout-text">Sign out</span>
+        </button>
       </div>
     </div>
   </header>
